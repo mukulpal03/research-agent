@@ -41,7 +41,7 @@ export const ResearchStateAnnotation = Annotation.Root({
    * Reducer: Appends new findings to existing findings array.
    */
   researchData: Annotation<ResearchFinding[]>({
-    reducer: (prev, next) => (Array.isArray(next) ? prev.concat(next) : prev),
+    reducer: (_, next) => next,
     default: () => [],
   }),
 

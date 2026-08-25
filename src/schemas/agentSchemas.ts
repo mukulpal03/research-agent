@@ -71,6 +71,9 @@ export const CriticOutputSchema = z.object({
   nextSubQueries: z
     .array(z.string())
     .describe('Targeted follow-up search queries to resolve missing gaps (empty array if isSatisfied is true)'),
+  rejectedSourceUrls: z
+    .array(z.string())
+    .describe('URLs of any sources from the current research data that are irrelevant, hallucinatory, or completely off-topic. These will be removed from the context.'),
 });
 
 export type CriticOutput = z.infer<typeof CriticOutputSchema>;

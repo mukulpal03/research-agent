@@ -111,6 +111,6 @@ export async function researcherNode(
   );
 
   return {
-    researchData: newFindings,
+    researchData: [...(researchData || []), ...newFindings],
   };
 }

@@ -102,6 +102,16 @@ export async function criticNode(
   console.log(`[Critic] Critique: ${criticResult.critique}`);
   console.log(`[Critic] Is Satisfied: ${criticResult.isSatisfied}`);
 
+  let updatedResearchData = researchData;
+  if (criticResult.rejectedSourceUrls && criticResult.rejectedSourceUrls.length > 0) {
+    const rejectedSet = new Set(criticResult.rejectedSourceUrls);
+    updatedResearchData = researchData.filter(f => !f.url || !rejectedSet.has(f.url));
+    const removedCount = researchData.length - updatedResearchData.length;
+    if (removedCount > 0) {
+      console.log(`[Critic] 🗑️ Garbage Collection: Removed ${removedCount} irrelevant source(s) from the context.`);
+    }
+  }
+
   // 1. Check if Max Recursion Depth is reached (Strict Hard Limit)
   if (depth >= env.MAX_DEPTH) {
     console.log(
@@ -115,6 +125,7 @@ export async function criticNode(
         nextSubQueries: [],
       },
       isSatisfied: true,
+      researchData: updatedResearchData,
     };
   }
 
@@ -127,6 +138,7 @@ export async function criticNode(
         nextSubQueries: [],
       },
       isSatisfied: true,
+      researchData: updatedResearchData,
     };
   }
 
@@ -149,5 +161,6 @@ export async function criticNode(
     isSatisfied: false,
     subQueries: constrainedSubQueries,
     depth: depth + 1,
+    researchData: updatedResearchData,
   };
 }
