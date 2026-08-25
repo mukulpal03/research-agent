@@ -47,8 +47,13 @@ export async function runResearch(query: string) {
 }
 
 async function main() {
+  const activeModel =
+    env.LLM_PROVIDER === 'bedrock' ? env.BEDROCK_MODEL : env.OPENAI_MODEL;
+
   console.log('🚀 Deep Research Agent System Initialized');
-  console.log(`Model: ${env.OPENAI_MODEL} | Max Depth: ${env.MAX_DEPTH}`);
+  console.log(
+    `Provider: ${env.LLM_PROVIDER} | Model: ${activeModel} | Max Depth: ${env.MAX_DEPTH}`
+  );
 
   // 1. Check if query was provided via CLI arguments (e.g. pnpm dev "what is x?")
   const cliArgsQuery = process.argv.slice(2).join(' ').trim();

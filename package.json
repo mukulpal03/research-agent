@@ -15,6 +15,7 @@
   "license": "ISC",
   "packageManager": "pnpm@10.33.2",
   "dependencies": {
+    "@ai-sdk/amazon-bedrock": "^5.0.62",
     "@ai-sdk/openai": "^4.0.47",
     "@langchain/langgraph": "^1.4.12",
     "@tavily/core": "^0.7.8",

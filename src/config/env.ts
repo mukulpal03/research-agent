@@ -3,27 +3,50 @@ import { z } from 'zod';
 
 dotenv.config();
 
-const envSchema = z.object({
-  OPENAI_API_KEY: z
-    .string({ message: 'OPENAI_API_KEY is required in environment or .env file' })
-    .min(1, 'OPENAI_API_KEY cannot be empty'),
+const envSchema = z
+  .object({
+    LLM_PROVIDER: z
+      .enum(['bedrock', 'openai'])
+      .default('bedrock'),
 
-  TAVILY_API_KEY: z
-    .string({ message: 'TAVILY_API_KEY is required in environment or .env file' })
-    .min(1, 'TAVILY_API_KEY cannot be empty'),
+    // AWS Bedrock Configuration
+    AWS_ACCESS_KEY_ID: z.string().optional(),
+    AWS_SECRET_ACCESS_KEY: z.string().optional(),
+    AWS_REGION: z.string().default('us-east-1'),
+    AWS_SESSION_TOKEN: z.string().optional(),
+    BEDROCK_MODEL: z
+      .string()
+      .default('anthropic.claude-3-5-sonnet-20241022-v2:0'),
 
-  OPENAI_MODEL: z.string().default('gpt-4o-mini'),
+    // OpenAI Configuration (Fallback/Alternative)
+    OPENAI_API_KEY: z.string().optional(),
+    OPENAI_MODEL: z.string().default('gpt-4o-mini'),
 
-  MAX_DEPTH: z.coerce
-    .number()
-    .int('MAX_DEPTH must be an integer')
-    .min(1, 'MAX_DEPTH must be at least 1')
-    .default(2),
+    // Search Configuration
+    TAVILY_API_KEY: z
+      .string({ message: 'TAVILY_API_KEY is required in environment or .env file' })
+      .min(1, 'TAVILY_API_KEY cannot be empty'),
 
-  NODE_ENV: z
-    .enum(['development', 'production', 'test'])
-    .default('development'),
-});
+    // General Runtime
+    MAX_DEPTH: z.coerce
+      .number()
+      .int('MAX_DEPTH must be an integer')
+      .min(1, 'MAX_DEPTH must be at least 1')
+      .default(2),
+
+    NODE_ENV: z
+      .enum(['development', 'production', 'test'])
+      .default('development'),
+  })
+  .superRefine((data, ctx) => {
+    if (data.LLM_PROVIDER === 'openai' && (!data.OPENAI_API_KEY || data.OPENAI_API_KEY.trim() === '')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'OPENAI_API_KEY is required when LLM_PROVIDER is set to "openai"',
+        path: ['OPENAI_API_KEY'],
+      });
+    }
+  });
 
 export type Env = z.infer<typeof envSchema>;
 
@@ -36,7 +59,7 @@ function validateEnv(): Env {
       .join('\n');
 
     const errorMessage = `❌ [Environment Configuration Error] Invalid or missing environment variables:\n${errorDetails}\n\nPlease check your .env file or reference .env.example.`;
-    
+
     console.error(errorMessage);
     throw new Error(errorMessage);
   }
