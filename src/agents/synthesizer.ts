@@ -97,7 +97,18 @@ export async function synthesizerNode(
   const report = [
     `# ${synthesisResult.title}`,
     `## Executive Summary\n${synthesisResult.executiveSummary}`,
-    ...synthesisResult.sections.map(s => `## ${s.heading}\n${s.content}\n\n*Sources:*\n${s.sourcesUsed.map(src => `- ${src}`).join('\n')}`),
+    ...synthesisResult.sections.map(s => {
+      const resolvedSources = s.sourcesUsed.map(src => {
+        const match = src.match(/Source\s*(\d+)/i);
+        if (match) {
+          const idx = parseInt(match[1], 10) - 1;
+          return researchData[idx]?.url || src;
+        }
+        return src;
+      });
+      const uniqueSources = [...new Set(resolvedSources)];
+      return `## ${s.heading}\n${s.content}\n\n*Sources:*\n${uniqueSources.map(url => `- ${url}`).join('\n')}`;
+    }),
     `## Key Takeaways\n${synthesisResult.keyTakeaways.map(t => `- ${t}`).join('\n')}`
   ].join('\n\n');
 

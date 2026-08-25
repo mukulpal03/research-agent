@@ -1,3 +1,5 @@
+import * as fs from 'fs';
+import * as path from 'path';
 import * as readline from 'readline/promises';
 import { stdin as input, stdout as output } from 'process';
 import { env } from './config';
@@ -39,8 +41,12 @@ export async function runResearch(query: string) {
   }
 
   if (finalState.finalReport) {
-    console.log(`\n--- Final Response ---`);
-    console.log(finalState.finalReport);
+    const randomId = Math.floor(Math.random() * 1000000);
+    const filename = `report-${randomId}.md`;
+    const filePath = path.join(process.cwd(), filename);
+    
+    fs.writeFileSync(filePath, finalState.finalReport);
+    console.log(`\n✅ Final report generated and saved to: ${filename}`);
   }
 
   return finalState;
