@@ -2,7 +2,7 @@
 
 ## 1. Architecture & Approach
 
-Will add a excalidraw diagram here
+![alt text](image.png)
 
 ### Agent Roles & Responsibilities
 
