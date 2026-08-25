@@ -3,6 +3,7 @@ import { z } from 'zod';
 /**
  * 1. Gatekeeper Agent Schema
  * Evaluates whether a query needs full recursive research or can be answered directly.
+ * Note: Uses nullable() instead of optional() to ensure full compatibility with OpenAI Strict JSON Schema.
  */
 export const GatekeeperOutputSchema = z.object({
   decision: z
@@ -13,8 +14,8 @@ export const GatekeeperOutputSchema = z.object({
     .describe('Clear justification for the triage routing decision'),
   directResponse: z
     .string()
-    .optional()
-    .describe('Direct response to provide to user if decision is direct_answer; empty if research_required'),
+    .nullable()
+    .describe('Direct response to provide to user if decision is direct_answer; null if research_required'),
 });
 
 export type GatekeeperOutput = z.infer<typeof GatekeeperOutputSchema>;
@@ -45,7 +46,10 @@ export const ResearchFindingSchema = z.object({
   title: z.string().describe('Title of the source webpage or article'),
   url: z.string().describe('URL reference of the source'),
   content: z.string().describe('Relevant extracted summary / factual content'),
-  publishedDate: z.string().optional().describe('Publication date if available'),
+  publishedDate: z
+    .string()
+    .nullable()
+    .describe('Publication date if available, otherwise null'),
 });
 
 export type ResearchFinding = z.infer<typeof ResearchFindingSchema>;
