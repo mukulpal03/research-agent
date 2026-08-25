@@ -30,7 +30,7 @@ export async function searchTavily(
   try {
     const response = await tavilyClient.search(trimmedQuery, {
       maxResults,
-      searchDepth: 'basic',
+      searchDepth: 'advanced',
     });
 
     if (!response.results || response.results.length === 0) {
