@@ -27,20 +27,15 @@ export async function runResearch(query: string) {
     console.log(`Gatekeeper Reasoning: ${finalState.gatekeeper.reasoning}`);
   }
 
-  if (finalState.subQueries && finalState.subQueries.length > 0) {
-    console.log(`\n📋 Research Sub-Queries (${finalState.subQueries.length}):`);
-    finalState.subQueries.forEach((sq, i) => {
-      console.log(`  ${i + 1}. ${sq}`);
-    });
+  if (finalState.critic) {
+    console.log(`\n🧐 Critic Evaluation:`);
+    console.log(`  - Is Satisfied: ${finalState.critic.isSatisfied}`);
+    console.log(`  - Critique: ${finalState.critic.critique}`);
+    console.log(`  - Final Depth Reached: ${finalState.depth}/${env.MAX_DEPTH}`);
   }
 
   if (finalState.researchData && finalState.researchData.length > 0) {
-    console.log(`\n📚 Extracted Research Findings (${finalState.researchData.length} items):`);
-    finalState.researchData.forEach((finding, idx) => {
-      console.log(`  [${idx + 1}] ${finding.title} (${finding.url})`);
-      console.log(`      Query: "${finding.query}"`);
-      console.log(`      Snippet: ${finding.content.slice(0, 120)}...`);
-    });
+    console.log(`\n📚 Total Research Findings Gathered: ${finalState.researchData.length} source(s)`);
   }
 
   if (finalState.finalReport) {
