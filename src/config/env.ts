@@ -9,9 +9,10 @@ const envSchema = z
       .enum(['bedrock', 'openai'])
       .default('bedrock'),
 
-    // AWS Bedrock Mantle Configuration
+    // AWS Bedrock Configuration
     BEDROCK_API_KEY: z.string().optional(),
     BEDROCK_BASE_URL: z.string().optional(),
+    AWS_REGION: z.string().default('us-east-1'),
     BEDROCK_MODEL: z
       .string()
       .default('mistral.mistral-large-3-675b-instruct'),
