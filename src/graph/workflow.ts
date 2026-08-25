@@ -9,6 +9,7 @@ import {
   plannerNode,
   researcherNode,
   criticNode,
+  synthesizerNode,
 } from '../agents';
 
 /**
@@ -25,11 +26,12 @@ export function routeGatekeeper(state: ResearchState): typeof END | 'planner_nod
 
 /**
  * Conditional edge router after Critic node execution.
- * If satisfied, finishes research. If gaps remain and depth <= MAX_DEPTH, loops back to Researcher.
+ * If satisfied (or max depth budget reached), routes to Synthesizer for final report compilation.
+ * If critical gaps remain and depth budget allows, loops back to Researcher for follow-up pass.
  */
-export function routeCritic(state: ResearchState): typeof END | 'researcher_node' {
+export function routeCritic(state: ResearchState): 'synthesizer_node' | 'researcher_node' {
   if (state.isSatisfied) {
-    return END;
+    return 'synthesizer_node';
   }
 
   // Loop back to researcher for follow-up pass if depth allows
@@ -37,40 +39,45 @@ export function routeCritic(state: ResearchState): typeof END | 'researcher_node
     return 'researcher_node';
   }
 
-  return END;
+  // Budget reached -> Proceed to synthesis
+  return 'synthesizer_node';
 }
 
 /**
- * Creates and compiles the LangGraph StateGraph for the Research System.
+ * Creates and compiles the complete LangGraph StateGraph for the Recursive Research System.
  */
 export function createResearchWorkflow() {
   const workflow = new StateGraph(ResearchStateAnnotation)
-    // Agent Nodes
+    // 1. Agent Nodes
     .addNode('gatekeeper_node', gatekeeperNode)
     .addNode('planner_node', plannerNode)
     .addNode('researcher_node', researcherNode)
     .addNode('critic_node', criticNode)
+    .addNode('synthesizer_node', synthesizerNode)
 
-    // Entry Edge: START -> gatekeeper_node
+    // 2. Entry Edge: START -> gatekeeper_node
     .addEdge(START, 'gatekeeper_node')
 
-    // Conditional Routing after Gatekeeper
+    // 3. Conditional Routing after Gatekeeper (Direct Answer vs Deep Research)
     .addConditionalEdges('gatekeeper_node', routeGatekeeper, {
       [END]: END,
       planner_node: 'planner_node',
     })
 
-    // Edge: planner_node -> researcher_node
+    // 4. Edge: planner_node -> researcher_node
     .addEdge('planner_node', 'researcher_node')
 
-    // Edge: researcher_node -> critic_node
+    // 5. Edge: researcher_node -> critic_node
     .addEdge('researcher_node', 'critic_node')
 
-    // Conditional Recursive Routing after Critic (Loop back or finish)
+    // 6. Conditional Recursive Routing after Critic (Loop back or Synthesize)
     .addConditionalEdges('critic_node', routeCritic, {
-      [END]: END,
+      synthesizer_node: 'synthesizer_node',
       researcher_node: 'researcher_node',
-    });
+    })
+
+    // 7. Terminal Edge: synthesizer_node -> END
+    .addEdge('synthesizer_node', END);
 
   return workflow.compile();
 }
