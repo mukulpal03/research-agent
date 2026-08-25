@@ -15,13 +15,11 @@ const envSchema = z
     AWS_REGION: z.string().default('us-east-1'),
     BEDROCK_FAST_MODEL: z.string().optional(),
     BEDROCK_REASONING_MODEL: z.string().optional(),
-    BEDROCK_MODEL: z.string().optional(),
 
     // OpenAI Configuration (Fallback/Alternative)
     OPENAI_API_KEY: z.string().optional(),
     OPENAI_FAST_MODEL: z.string().optional(),
     OPENAI_REASONING_MODEL: z.string().optional(),
-    OPENAI_MODEL: z.string().optional(),
 
     // Search Configuration
     TAVILY_API_KEY: z.string().optional(),
@@ -48,10 +46,10 @@ const envSchema = z
       .default('development'),
   })
   .transform((data) => {
-    const bedrockFast = process.env.BEDROCK_FAST_MODEL || data.BEDROCK_FAST_MODEL || process.env.BEDROCK_MODEL || data.BEDROCK_MODEL || '';
-    const bedrockReasoning = process.env.BEDROCK_REASONING_MODEL || data.BEDROCK_REASONING_MODEL || process.env.BEDROCK_MODEL || data.BEDROCK_MODEL || '';
-    const openaiFast = process.env.OPENAI_FAST_MODEL || data.OPENAI_FAST_MODEL || process.env.OPENAI_MODEL || data.OPENAI_MODEL || '';
-    const openaiReasoning = process.env.OPENAI_REASONING_MODEL || data.OPENAI_REASONING_MODEL || process.env.OPENAI_MODEL || data.OPENAI_MODEL || '';
+    const bedrockFast = process.env.BEDROCK_FAST_MODEL || data.BEDROCK_FAST_MODEL || '';
+    const bedrockReasoning = process.env.BEDROCK_REASONING_MODEL || data.BEDROCK_REASONING_MODEL || '';
+    const openaiFast = process.env.OPENAI_FAST_MODEL || data.OPENAI_FAST_MODEL || '';
+    const openaiReasoning = process.env.OPENAI_REASONING_MODEL || data.OPENAI_REASONING_MODEL || '';
 
     return {
       ...data,
@@ -73,14 +71,14 @@ const envSchema = z
       if (!data.BEDROCK_FAST_MODEL || data.BEDROCK_FAST_MODEL.trim() === '') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'BEDROCK_FAST_MODEL (or BEDROCK_MODEL) is required in environment variables when LLM_PROVIDER is set to "bedrock"',
+          message: 'BEDROCK_FAST_MODEL is required in environment variables when LLM_PROVIDER is set to "bedrock"',
           path: ['BEDROCK_FAST_MODEL'],
         });
       }
       if (!data.BEDROCK_REASONING_MODEL || data.BEDROCK_REASONING_MODEL.trim() === '') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'BEDROCK_REASONING_MODEL (or BEDROCK_MODEL) is required in environment variables when LLM_PROVIDER is set to "bedrock"',
+          message: 'BEDROCK_REASONING_MODEL is required in environment variables when LLM_PROVIDER is set to "bedrock"',
           path: ['BEDROCK_REASONING_MODEL'],
         });
       }
@@ -97,14 +95,14 @@ const envSchema = z
       if (!data.OPENAI_FAST_MODEL || data.OPENAI_FAST_MODEL.trim() === '') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'OPENAI_FAST_MODEL (or OPENAI_MODEL) is required in environment variables when LLM_PROVIDER is set to "openai"',
+          message: 'OPENAI_FAST_MODEL is required in environment variables when LLM_PROVIDER is set to "openai"',
           path: ['OPENAI_FAST_MODEL'],
         });
       }
       if (!data.OPENAI_REASONING_MODEL || data.OPENAI_REASONING_MODEL.trim() === '') {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'OPENAI_REASONING_MODEL (or OPENAI_MODEL) is required in environment variables when LLM_PROVIDER is set to "openai"',
+          message: 'OPENAI_REASONING_MODEL is required in environment variables when LLM_PROVIDER is set to "openai"',
           path: ['OPENAI_REASONING_MODEL'],
         });
       }
