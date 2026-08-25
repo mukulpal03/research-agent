@@ -62,15 +62,22 @@ async function main() {
   const rl = readline.createInterface({ input, output });
 
   try {
-    const userQuery = await rl.question(`${c.bold}${c.brightCyan}❓ Enter your research query:${c.reset} `);
-    const trimmed = userQuery.trim();
+    while (true) {
+      const userQuery = await rl.question(`${c.bold}${c.brightCyan}❓ Enter your research query (or 'exit' to quit):${c.reset} `);
+      const trimmed = userQuery.trim();
 
-    if (!trimmed) {
-      logger.warn('No query provided. Exiting.');
-      return;
+      if (!trimmed) {
+        continue;
+      }
+
+      if (trimmed.toLowerCase() === 'exit' || trimmed.toLowerCase() === 'quit') {
+        logger.warn('Exiting Research Agent.');
+        break;
+      }
+
+      await runResearch(trimmed);
+      console.log('\n'); // Spacing before next query
     }
-
-    await runResearch(trimmed);
   } finally {
     rl.close();
   }

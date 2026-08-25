@@ -22,8 +22,12 @@ function formatFindingsForEvaluation(findings: ResearchFinding[]): string {
 
   return findings
     .map(
-      (item, idx) =>
-        `[Source ${idx + 1}] Title: ${item.title}\nURL: ${item.url}\nQueried For: "${item.query}"\nContent: ${item.content}`,
+      (item, idx) => {
+        const truncatedContent = item.content.length > 400 
+          ? item.content.substring(0, 400) + '...' 
+          : item.content;
+        return `[Source ${idx + 1}] Title: ${item.title}\nURL: ${item.url}\nQueried For: "${item.query}"\nContent: ${truncatedContent}`;
+      }
     )
     .join("\n\n---\n\n");
 }
@@ -99,12 +103,13 @@ export async function criticNode(
   let updatedResearchData = researchData;
   let purgedCount = 0;
   if (
-    criticResult.rejectedSourceUrls &&
-    criticResult.rejectedSourceUrls.length > 0
+    criticResult.rejectedSourceIndices &&
+    criticResult.rejectedSourceIndices.length > 0
   ) {
-    const rejectedSet = new Set(criticResult.rejectedSourceUrls);
+    const rejectedSet = new Set(criticResult.rejectedSourceIndices);
+    // idx + 1 because the prompt labels sources starting at 1
     updatedResearchData = researchData.filter(
-      (f) => !f.url || !rejectedSet.has(f.url),
+      (_, idx) => !rejectedSet.has(idx + 1)
     );
     purgedCount = researchData.length - updatedResearchData.length;
   }

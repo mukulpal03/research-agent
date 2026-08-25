@@ -36,11 +36,11 @@
 To ensure the system remains robust, efficient, and cost-effective compared to other deep research agents on the market, several specific architectural enhancements were implemented:
 
 *   **Concurrency Control (`p-limit`):** When the Planner generates multiple sub-queries, firing them all off simultaneously can hit API rate limits or cause network bottlenecks. By wrapping the parallel execution in `p-limit`, we maintain high-speed concurrent fetching while strictly controlling the maximum number of active requests at any given time.
-*   **Critic Garbage Collection:** As the system loops, the context window can quickly fill up with irrelevant or low-quality search results. The Critic agent actively identifies and flags useless sources (`rejectedSourceUrls`). These are purged from the system's state before the next iteration, acting as a garbage collector that keeps the context clean and drastically reduces token costs.
+*   **Critic Garbage Collection:** As the system loops, the context window can quickly fill up with irrelevant or low-quality search results. The Critic agent actively identifies and flags useless sources (`rejectedSourceIndices`). These are purged from the system's state before the next iteration, acting as a garbage collector that keeps the context clean and drastically reduces token costs.
 *   **In-Memory Source Deduplication:** Across multiple sub-queries and recursive loops, search engines often return the same popular URLs. The Researcher maintains an in-memory `Set` of previously visited URLs. Duplicate links are immediately discarded before being processed, preventing redundant data from polluting the context window and saving tokens.
 *   **Fault-Tolerant Batching:** In the Researcher, sub-queries are executed using `Promise.allSettled` rather than `Promise.all`. This guarantees that if a single API call fails or times out, it won't crash the entire batch of concurrent searches, ensuring partial data is always recovered.
 
-## 6. What We Might Build (Or Skip) If I Get Time
+## 6. What We Might Build (Or Skip)
 
 If I end up getting some spare time at the end, here are a few things I might wire up:
 

@@ -14,7 +14,7 @@ export const GatekeeperOutputSchema = z.object({
     .describe('Clear justification for the triage routing decision'),
   directResponse: z
     .string()
-    .nullable()
+    .nullish()
     .describe('Direct response to provide to user if decision is direct_answer; null if research_required'),
 });
 
@@ -71,9 +71,9 @@ export const CriticOutputSchema = z.object({
   nextSubQueries: z
     .array(z.string())
     .describe('Targeted follow-up search queries to resolve missing gaps (empty array if isSatisfied is true)'),
-  rejectedSourceUrls: z
-    .array(z.string())
-    .describe('URLs of any sources from the current research data that are irrelevant, hallucinatory, or completely off-topic. These will be removed from the context.'),
+  rejectedSourceIndices: z
+    .array(z.number())
+    .describe('1-based indices of any sources from the current research data that are irrelevant, hallucinatory, or completely off-topic. These will be removed from the context.'),
 });
 
 export type CriticOutput = z.infer<typeof CriticOutputSchema>;

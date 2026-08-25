@@ -26,7 +26,8 @@ Your sole responsibility is to evaluate aggregated research findings against the
 
 3. **Data Filtering & Garbage Collection**:
    - Carefully review all sources in the aggregated research data.
-   - If any source is completely irrelevant, hallucinatory, off-topic, or adds purely garbage noise, identify its EXACT URL and add it to the "rejectedSourceUrls" array.
+   - If any source is completely irrelevant, hallucinatory, off-topic, or adds purely garbage noise, identify its 1-based index (e.g., if it's [Source 3], the index is 3) and add it to the "rejectedSourceIndices" array.
+   - Do NOT reject sources that are even partially relevant. Only reject pure noise.
    - This actively deletes noise from the state to prevent context bloat.
 
 4. **Output Discipline**:
