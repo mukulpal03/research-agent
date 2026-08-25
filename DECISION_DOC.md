@@ -10,7 +10,7 @@
 *   **Planner Agent:** Receives complex queries from the Gatekeeper. Its sole responsibility is to break down the main query into a distinct sub-questions required to form a complete answer.
 *   **Researcher Agent(s):** Takes a single sub-question, queries the search API and extracts the most relevant information. To minimize latency, multiple Researchers are spun up concurrently to handle all sub-questions simultaneously.
 *   **Critic Agent:** The evaluator of the system. It reviews all aggregated findings against the original query. If the information is incomplete, it generates new, targeted sub-queries and routes them back to the Researchers. It enforces the `max_depth` budget to prevent runaway loops.
-*   **Synthesizer Agent:** Activated only when the Critic is satisfied (or the budget is hit). It compiles all approved research into the final, cited report.
+*   **Synthesizer Agent:** Activated only when the Critic is satisfied (or the budget is hit). It compiles all approved research into the final report.
 
 ## 2. Alternatives Considered & Rejected
 
