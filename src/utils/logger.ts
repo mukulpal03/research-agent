@@ -1,44 +1,83 @@
 /**
  * Sleek Terminal Styling & Logger Utility for Deep Research Agent
  */
+import boxen from 'boxen';
 
 const ESC = '\x1b[';
+
+function hex(hexStr: string): string {
+  const hex = hexStr.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return `\x1b[38;2;${r};${g};${b}m`;
+}
+
+function bgHex(hexStr: string): string {
+  const hex = hexStr.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return `\x1b[48;2;${r};${g};${b}m`;
+}
+
+// Catppuccin Mocha Palette
+const catppuccin = {
+  rosewater: '#f5e0dc',
+  flamingo: '#f2cdcd',
+  pink: '#f5c2e7',
+  mauve: '#cba6f7',
+  red: '#f38ba8',
+  maroon: '#eba0ac',
+  peach: '#fab387',
+  yellow: '#f9e2af',
+  green: '#a6e3a1',
+  teal: '#94e2d5',
+  sky: '#89dceb',
+  sapphire: '#74c7ec',
+  blue: '#89b4fa',
+  lavender: '#b4befe',
+  text: '#cdd6f4',
+  overlay1: '#7f849c',
+  overlay0: '#6c7086',
+  base: '#1e1e2e',
+};
 
 export const colors = {
   reset: `${ESC}0m`,
   bold: `${ESC}1m`,
-  dim: `${ESC}2m`,
+  dim: hex(catppuccin.overlay1),
   italic: `${ESC}3m`,
   underline: `${ESC}4m`,
 
   // Colors
-  black: `${ESC}30m`,
-  red: `${ESC}31m`,
-  green: `${ESC}32m`,
-  yellow: `${ESC}33m`,
-  blue: `${ESC}34m`,
-  magenta: `${ESC}35m`,
-  cyan: `${ESC}36m`,
-  white: `${ESC}37m`,
-  gray: `${ESC}90m`,
+  black: hex(catppuccin.base),
+  red: hex(catppuccin.red),
+  green: hex(catppuccin.green),
+  yellow: hex(catppuccin.yellow),
+  blue: hex(catppuccin.blue),
+  magenta: hex(catppuccin.mauve),
+  cyan: hex(catppuccin.sky),
+  white: hex(catppuccin.text),
+  gray: hex(catppuccin.overlay0),
 
   // Bright
-  brightRed: `${ESC}91m`,
-  brightGreen: `${ESC}92m`,
-  brightYellow: `${ESC}93m`,
-  brightBlue: `${ESC}94m`,
-  brightMagenta: `${ESC}95m`,
-  brightCyan: `${ESC}96m`,
-  brightWhite: `${ESC}97m`,
+  brightRed: hex(catppuccin.maroon),
+  brightGreen: hex(catppuccin.teal),
+  brightYellow: hex(catppuccin.peach),
+  brightBlue: hex(catppuccin.sapphire),
+  brightMagenta: hex(catppuccin.pink),
+  brightCyan: hex(catppuccin.sky),
+  brightWhite: hex(catppuccin.rosewater),
 
-  // Backgrounds
-  bgCyan: `${ESC}46;30m`,
-  bgMagenta: `${ESC}45;37m`,
-  bgBlue: `${ESC}44;37m`,
-  bgGreen: `${ESC}42;30m`,
-  bgYellow: `${ESC}43;30m`,
-  bgRed: `${ESC}41;37m`,
-  bgGray: `${ESC}100;37m`,
+  // Background Badges
+  bgCyan: `${bgHex(catppuccin.sky)}${hex(catppuccin.base)}${ESC}1m`,
+  bgMagenta: `${bgHex(catppuccin.mauve)}${hex(catppuccin.base)}${ESC}1m`,
+  bgBlue: `${bgHex(catppuccin.blue)}${hex(catppuccin.base)}${ESC}1m`,
+  bgGreen: `${bgHex(catppuccin.green)}${hex(catppuccin.base)}${ESC}1m`,
+  bgYellow: `${bgHex(catppuccin.yellow)}${hex(catppuccin.base)}${ESC}1m`,
+  bgRed: `${bgHex(catppuccin.red)}${hex(catppuccin.base)}${ESC}1m`,
+  bgGray: `${bgHex(catppuccin.overlay0)}${hex(catppuccin.text)}${ESC}1m`,
 };
 
 const c = colors;
@@ -53,25 +92,29 @@ export const logger = {
    * Main App Initialization Banner
    */
   banner(provider: string, fastModel: string, reasoningModel: string, maxDepth: number) {
-    const width = 76;
-    const line = '─'.repeat(width - 2);
-    console.log(`\n${c.cyan}╭${line}╮${c.reset}`);
-    console.log(`${c.cyan}│${c.reset}  ${c.bold}${c.brightCyan}🚀 DEEP RESEARCH MULTI-AGENT SYSTEM${c.reset}${' '.repeat(width - 39)}${c.cyan}│${c.reset}`);
-    console.log(`${c.cyan}├${line}┤${c.reset}`);
-    console.log(`${c.cyan}│${c.reset}  ${c.gray}Provider:${c.reset}   ${c.brightWhite}${provider}${c.reset}${' '.repeat(Math.max(1, width - 17 - provider.length))}${c.cyan}│${c.reset}`);
-    console.log(`${c.cyan}│${c.reset}  ${c.gray}Fast Model:${c.reset} ${c.yellow}${fastModel}${c.reset}${' '.repeat(Math.max(1, width - 19 - fastModel.length))}${c.cyan}│${c.reset}`);
-    console.log(`${c.cyan}│${c.reset}  ${c.gray}Reasoning:${c.reset}  ${c.magenta}${reasoningModel}${c.reset}${' '.repeat(Math.max(1, width - 19 - reasoningModel.length))}${c.cyan}│${c.reset}`);
-    console.log(`${c.cyan}│${c.reset}  ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}${' '.repeat(Math.max(1, width - 33))}${c.cyan}│${c.reset}`);
-    console.log(`${c.cyan}╰${line}╯${c.reset}\n`);
+    const content = `${c.gray}Provider:${c.reset}   ${c.brightWhite}${provider}${c.reset}
+${c.gray}Fast Model:${c.reset} ${c.yellow}${fastModel}${c.reset}
+${c.gray}Reasoning:${c.reset}  ${c.magenta}${reasoningModel}${c.reset}
+${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`;
+
+    console.log('\n' + boxen(content, { 
+      title: `${c.bold}${c.brightCyan}🚀 DEEP RESEARCH MULTI-AGENT SYSTEM${c.reset}`,
+      padding: 1, 
+      borderColor: 'cyan', 
+      borderStyle: 'round' 
+    }) + '\n');
   },
 
   /**
    * User Research Query Box
    */
   researchGoal(query: string) {
-    console.log(`${c.brightBlue}╭── 🔎 RESEARCH GOAL ───────────────────────────────────────────────────${c.reset}`);
-    console.log(`${c.brightBlue}│${c.reset}  ${c.bold}"${query}"${c.reset}`);
-    console.log(`${c.brightBlue}╰────────────────────────────────────────────────────────────────────────${c.reset}\n`);
+    console.log('\n' + boxen(`${c.bold}"${query}"${c.reset}`, {
+      title: `${c.brightBlue}🔎 RESEARCH GOAL${c.reset}`,
+      padding: { top: 0, bottom: 0, left: 1, right: 1 },
+      borderColor: 'blue',
+      borderStyle: 'round'
+    }) + '\n');
   },
 
   /**
@@ -83,25 +126,31 @@ export const logger = {
       ? `${c.bgGreen} ⚡ DIRECT ANSWER ${c.reset}`
       : `${c.bgCyan} 🔬 DEEP RESEARCH REQUIRED ${c.reset}`;
 
-    console.log(`${c.cyan}┌─── 🛡️  [Gatekeeper Agent] Triage & Routing${c.reset}`);
-    console.log(`${c.cyan}│${c.reset}  ${c.gray}Decision:${c.reset}   ${badge}`);
-    console.log(`${c.cyan}│${c.reset}  ${c.gray}Reasoning:${c.reset}  ${c.dim}${truncate(reasoning, 120)}${c.reset}`);
-    console.log(`${c.cyan}└───${c.reset}\n`);
+    const content = `${c.gray}Decision:${c.reset}   ${badge}\n${c.gray}Reasoning:${c.reset}  ${c.dim}${reasoning}${c.reset}`;
+    console.log(boxen(content, {
+      title: `${c.cyan}🛡️ [Gatekeeper Agent] Triage & Routing${c.reset}`,
+      padding: { top: 0, bottom: 0, left: 1, right: 1 },
+      borderColor: 'cyan',
+      borderStyle: 'round'
+    }) + '\n');
   },
 
   /**
    * Planner Node Output
    */
   planner(strategy: string, subQueries: string[]) {
-    console.log(`${c.magenta}┌─── 📋 [Planner Agent] Formulating Strategic Decomposition${c.reset}`);
-    console.log(`${c.magenta}│${c.reset}  ${c.gray}Strategy:${c.reset}   ${c.dim}${truncate(strategy, 120)}${c.reset}`);
-    console.log(`${c.magenta}│${c.reset}  ${c.gray}Generated Sub-Queries (${subQueries.length}):${c.reset}`);
+    let content = `${c.gray}Strategy:${c.reset}   ${c.dim}${strategy}${c.reset}\n`;
+    content += `${c.gray}Generated Sub-Queries (${subQueries.length}):${c.reset}\n`;
     subQueries.forEach((sq, idx) => {
-      const isLast = idx === subQueries.length - 1;
-      const branch = isLast ? '└─' : '├─';
-      console.log(`${c.magenta}│${c.reset}   ${c.gray}${branch}${c.reset} ${c.bold}${idx + 1}.${c.reset} ${c.brightWhite}"${sq}"${c.reset}`);
+      content += `  ${c.bold}${idx + 1}.${c.reset} ${c.brightWhite}"${sq}"${c.reset}\n`;
     });
-    console.log(`${c.magenta}└───${c.reset}\n`);
+
+    console.log(boxen(content.trimEnd(), {
+      title: `${c.magenta}📋 [Planner Agent] Formulating Strategic Decomposition${c.reset}`,
+      padding: { top: 0, bottom: 0, left: 1, right: 1 },
+      borderColor: 'magenta',
+      borderStyle: 'round'
+    }) + '\n');
   },
 
   /**
@@ -156,33 +205,39 @@ export const logger = {
       ? `${c.bgGreen} ✅ SATISFIED — COMPLETE ${c.reset}`
       : `${c.bgYellow} 🔄 GAPS IDENTIFIED — RECURSION REQUIRED ${c.reset}`;
 
-    console.log(`${c.brightMagenta}┌─── 🧐 [Critic Agent] Evaluation & Gap Analysis (Round ${round}/${maxDepth})${c.reset}`);
-    console.log(`${c.brightMagenta}│${c.reset}  ${c.gray}Status:${c.reset}    ${badge}`);
-    console.log(`${c.brightMagenta}│${c.reset}  ${c.gray}Critique:${c.reset}  ${c.dim}${truncate(critique, 120)}${c.reset}`);
+    let content = `${c.gray}Status:${c.reset}    ${badge}\n`;
+    content += `${c.gray}Critique:${c.reset}  ${c.dim}${critique}${c.reset}\n`;
 
     if (purgedCount > 0) {
-      console.log(`${c.brightMagenta}│${c.reset}  ${c.red}🗑️ Garbage Purged:${c.reset} ${purgedCount} off-topic/noisy source(s) removed from context`);
+      content += `${c.red}🗑️ Garbage Purged:${c.reset} ${purgedCount} off-topic/noisy source(s) removed from context\n`;
     }
 
     if (!isSatisfied && nextQueries.length > 0) {
-      console.log(`${c.brightMagenta}│${c.reset}  ${c.yellow}Follow-up Sub-Queries for Round ${round + 1} (${nextQueries.length}):${c.reset}`);
+      content += `${c.yellow}Follow-up Sub-Queries for Round ${round + 1} (${nextQueries.length}):${c.reset}\n`;
       nextQueries.forEach((q, i) => {
-        const isLast = i === nextQueries.length - 1;
-        const branch = isLast ? '└─' : '├─';
-        console.log(`${c.brightMagenta}│${c.reset}   ${c.gray}${branch}${c.reset} ${c.bold}${i + 1}.${c.reset} ${c.brightWhite}"${q}"${c.reset}`);
+        content += `  ${c.bold}${i + 1}.${c.reset} ${c.brightWhite}"${q}"${c.reset}\n`;
       });
     }
 
-    console.log(`${c.brightMagenta}└───${c.reset}\n`);
+    console.log(boxen(content.trimEnd(), {
+      title: `${c.brightMagenta}🧐 [Critic Agent] Evaluation & Gap Analysis (Round ${round}/${maxDepth})${c.reset}`,
+      padding: { top: 0, bottom: 0, left: 1, right: 1 },
+      borderColor: 'magenta',
+      borderStyle: 'round'
+    }) + '\n');
   },
 
   /**
    * Critic Max Depth Notice
    */
   criticMaxDepthReached(maxDepth: number, totalSources: number) {
-    console.log(`${c.yellow}┌─── 🛑 [Critic Agent] Max Recursion Depth Budget Reached (${maxDepth}/${maxDepth})${c.reset}`);
-    console.log(`${c.yellow}│${c.reset}  Proceeding directly to final report synthesis with ${c.bold}${totalSources} verified sources${c.reset}.`);
-    console.log(`${c.yellow}└───${c.reset}\n`);
+    const content = `Proceeding directly to final report synthesis with ${c.bold}${totalSources} verified sources${c.reset}.`;
+    console.log(boxen(content, {
+      title: `${c.yellow}🛑 [Critic Agent] Max Recursion Depth Budget Reached (${maxDepth}/${maxDepth})${c.reset}`,
+      padding: { top: 0, bottom: 0, left: 1, right: 1 },
+      borderColor: 'yellow',
+      borderStyle: 'round'
+    }) + '\n');
   },
 
   /**
@@ -199,10 +254,13 @@ export const logger = {
    * Report Saved Success Box
    */
   reportSaved(filename: string, fullPath: string) {
-    console.log(`\n${c.green}╭── ✅ REPORT GENERATED & PERSISTED ────────────────────────────────────${c.reset}`);
-    console.log(`${c.green}│${c.reset}  ${c.gray}Filename:${c.reset}  ${c.bold}${c.brightWhite}${filename}${c.reset}`);
-    console.log(`${c.green}│${c.reset}  ${c.gray}Location:${c.reset}  ${c.dim}${fullPath}${c.reset}`);
-    console.log(`${c.green}╰────────────────────────────────────────────────────────────────────────${c.reset}\n`);
+    const content = `${c.gray}Filename:${c.reset}  ${c.bold}${c.brightWhite}${filename}${c.reset}\n${c.gray}Location:${c.reset}  ${c.dim}${fullPath}${c.reset}`;
+    console.log('\n' + boxen(content, {
+      title: `${c.green}✅ REPORT GENERATED & PERSISTED${c.reset}`,
+      padding: 1,
+      borderColor: 'green',
+      borderStyle: 'round'
+    }) + '\n');
   },
 
   /**
@@ -215,28 +273,24 @@ export const logger = {
     totalSources?: number;
     isSatisfied?: boolean;
   }) {
-    const width = 76;
-    const line = '─'.repeat(width - 2);
-
-    console.log(`${c.cyan}╭${line}╮${c.reset}`);
-    console.log(`${c.cyan}│${c.reset}  ${c.bold}${c.brightCyan}🏁 RESEARCH WORKFLOW COMPLETED${c.reset}${' '.repeat(width - 34)}${c.cyan}│${c.reset}`);
-    console.log(`${c.cyan}├${line}┤${c.reset}`);
-
+    let content = '';
+    
     if (stats.decision) {
-      console.log(`${c.cyan}│${c.reset}  ${c.gray}Route:${c.reset}         ${stats.decision === 'direct_answer' ? c.green + 'Direct Answer' : c.cyan + 'Deep Research'}${c.reset}${' '.repeat(Math.max(1, width - 29))}${c.cyan}│${c.reset}`);
+      content += `${c.gray}Route:${c.reset}         ${stats.decision === 'direct_answer' ? c.green + 'Direct Answer' : c.cyan + 'Deep Research'}${c.reset}\n`;
     }
-
     if (stats.finalDepth !== undefined) {
-      const depthStr = `${stats.finalDepth} / ${stats.maxDepth} rounds`;
-      console.log(`${c.cyan}│${c.reset}  ${c.gray}Depth Reached:${c.reset} ${depthStr}${' '.repeat(Math.max(1, width - 22 - depthStr.length))}${c.cyan}│${c.reset}`);
+      content += `${c.gray}Depth Reached:${c.reset} ${stats.finalDepth} / ${stats.maxDepth} rounds\n`;
     }
-
     if (stats.totalSources !== undefined && stats.totalSources > 0) {
-      const srcStr = `${stats.totalSources} verified source(s)`;
-      console.log(`${c.cyan}│${c.reset}  ${c.gray}Sources Used:${c.reset}  ${srcStr}${' '.repeat(Math.max(1, width - 21 - srcStr.length))}${c.cyan}│${c.reset}`);
+      content += `${c.gray}Sources Used:${c.reset}  ${stats.totalSources} verified source(s)\n`;
     }
 
-    console.log(`${c.cyan}╰${line}╯${c.reset}\n`);
+    console.log('\n' + boxen(content.trim(), { 
+      title: `${c.bold}${c.brightCyan}🏁 RESEARCH WORKFLOW COMPLETED${c.reset}`,
+      padding: 1, 
+      borderColor: 'cyan', 
+      borderStyle: 'round' 
+    }) + '\n');
   },
 
   /**
