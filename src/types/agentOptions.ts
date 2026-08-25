@@ -6,6 +6,7 @@ export type ModelRole = 'fast' | 'reasoning';
 export interface AgentExecutionOptions {
   model?: string;
   role?: ModelRole;
+  maxOutputTokens?: number;
 }
 
 export type GatekeeperOptions = AgentExecutionOptions;

@@ -56,6 +56,7 @@ export async function synthesizeResearch(
     const result = streamText({
       model: getLLM(options?.model || options?.role || 'reasoning'),
       system: getSynthesizerSystemPrompt(),
+      maxOutputTokens: options?.maxOutputTokens ?? 8192,
       prompt: `
 User Original Query:
 "${query}"
@@ -76,6 +77,14 @@ CRITICAL CITATION RULES:
     for await (const chunk of result.textStream) {
       process.stdout.write(chunk);
       fullReport += chunk;
+    }
+    process.stdout.write('\n');
+
+    const finishReason = await result.finishReason;
+    if (finishReason === 'length') {
+      logger.warn(
+        'Synthesizer output reached the maximum token limit. The report might be truncated.'
+      );
     }
 
     if (!fullReport.trim()) {
