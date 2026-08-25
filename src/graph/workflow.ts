@@ -3,7 +3,7 @@ import {
   ResearchStateAnnotation,
   type ResearchState,
 } from '../state';
-import { gatekeeperNode, plannerNode } from '../agents';
+import { gatekeeperNode, plannerNode, researcherNode } from '../agents';
 
 /**
  * Conditional edge router after Gatekeeper node execution.
@@ -25,6 +25,7 @@ export function createResearchWorkflow() {
     // Agent Nodes
     .addNode('gatekeeper_node', gatekeeperNode)
     .addNode('planner_node', plannerNode)
+    .addNode('researcher_node', researcherNode)
 
     // Entry Edge: START -> gatekeeper_node
     .addEdge(START, 'gatekeeper_node')
@@ -34,7 +35,8 @@ export function createResearchWorkflow() {
       [END]: END,
       planner_node: 'planner_node',
     })
-    .addEdge('planner_node', END);
+    .addEdge('planner_node', 'researcher_node')
+    .addEdge('researcher_node', END);
 
   return workflow.compile();
 }

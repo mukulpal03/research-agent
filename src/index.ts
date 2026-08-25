@@ -34,6 +34,15 @@ export async function runResearch(query: string) {
     });
   }
 
+  if (finalState.researchData && finalState.researchData.length > 0) {
+    console.log(`\n📚 Extracted Research Findings (${finalState.researchData.length} items):`);
+    finalState.researchData.forEach((finding, idx) => {
+      console.log(`  [${idx + 1}] ${finding.title} (${finding.url})`);
+      console.log(`      Query: "${finding.query}"`);
+      console.log(`      Snippet: ${finding.content.slice(0, 120)}...`);
+    });
+  }
+
   if (finalState.finalReport) {
     console.log(`\n--- Final Response ---`);
     console.log(finalState.finalReport);

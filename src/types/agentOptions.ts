@@ -1,5 +1,5 @@
 /**
- * Common configuration options for agent executions
+ * Common configuration options for LLM-based agent executions
  */
 export interface AgentExecutionOptions {
   model?: string;
@@ -9,3 +9,10 @@ export type GatekeeperOptions = AgentExecutionOptions;
 export type PlannerOptions = AgentExecutionOptions;
 export type CriticOptions = AgentExecutionOptions;
 export type SynthesizerOptions = AgentExecutionOptions;
+
+/**
+ * Options for Researcher execution
+ */
+export interface ResearcherOptions {
+  maxResults?: number;
+}
