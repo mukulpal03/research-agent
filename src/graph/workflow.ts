@@ -3,19 +3,18 @@ import {
   ResearchStateAnnotation,
   type ResearchState,
 } from '../state';
-import { gatekeeperNode } from '../agents';
+import { gatekeeperNode, plannerNode } from '../agents';
 
 /**
  * Conditional edge router after Gatekeeper node execution.
- * Evaluates whether to short-circuit immediately with direct answer or proceed to research.
+ * Evaluates whether to short-circuit immediately with direct answer or proceed to Planner.
  */
 export function routeGatekeeper(state: ResearchState): typeof END | 'planner_node' {
   if (state.gatekeeper?.decision === 'direct_answer') {
     return END;
   }
 
-  // Will route to 'planner_node' once Planner agent is added
-  return END;
+  return 'planner_node';
 }
 
 /**
@@ -23,11 +22,19 @@ export function routeGatekeeper(state: ResearchState): typeof END | 'planner_nod
  */
 export function createResearchWorkflow() {
   const workflow = new StateGraph(ResearchStateAnnotation)
+    // Agent Nodes
     .addNode('gatekeeper_node', gatekeeperNode)
+    .addNode('planner_node', plannerNode)
+
+    // Entry Edge: START -> gatekeeper_node
     .addEdge(START, 'gatekeeper_node')
+
+    // Conditional Routing after Gatekeeper
     .addConditionalEdges('gatekeeper_node', routeGatekeeper, {
       [END]: END,
-    });
+      planner_node: 'planner_node',
+    })
+    .addEdge('planner_node', END);
 
   return workflow.compile();
 }

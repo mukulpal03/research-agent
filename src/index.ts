@@ -24,7 +24,14 @@ export async function runResearch(query: string) {
 
   if (finalState.gatekeeper) {
     console.log(`Gatekeeper Decision: ${finalState.gatekeeper.decision}`);
-    console.log(`Reasoning: ${finalState.gatekeeper.reasoning}`);
+    console.log(`Gatekeeper Reasoning: ${finalState.gatekeeper.reasoning}`);
+  }
+
+  if (finalState.subQueries && finalState.subQueries.length > 0) {
+    console.log(`\n📋 Research Sub-Queries (${finalState.subQueries.length}):`);
+    finalState.subQueries.forEach((sq, i) => {
+      console.log(`  ${i + 1}. ${sq}`);
+    });
   }
 
   if (finalState.finalReport) {
