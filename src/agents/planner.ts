@@ -28,7 +28,7 @@ export async function generatePlan(
 
   try {
     const { output } = await generateText({
-      model: getLLM(options?.model),
+      model: getLLM(options?.model || options?.role || 'reasoning'),
       output: Output.object({
         schema: PlannerOutputSchema,
       }),

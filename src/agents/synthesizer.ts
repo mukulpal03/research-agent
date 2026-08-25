@@ -1,24 +1,34 @@
-import { generateText, Output } from 'ai';
+import { streamText } from 'ai';
 import { getLLM } from '../services';
 import { getSynthesizerSystemPrompt } from '../prompts';
 import type { SynthesizerOptions } from '../types';
-import {
-  SynthesizerOutputSchema,
-  type SynthesizerOutput,
-  type ResearchFinding,
-  type ResearchState,
-  type ResearchStateUpdate,
+import type {
+  ResearchFinding,
+  ResearchState,
+  ResearchStateUpdate,
 } from '../state';
 
 /**
- * Formats aggregated research findings into clean reference material for synthesis.
+ * Formats aggregated research findings into clean reference material for synthesis,
+ * deduplicating by URL to minimize context tokens.
  */
 function formatFindingsForSynthesis(findings: ResearchFinding[]): string {
   if (!findings || findings.length === 0) {
     return 'No external research findings were retrieved. Provide best effort synthesis based on verified internal knowledge while noting the absence of live sources.';
   }
 
-  return findings
+  const seenUrls = new Set<string>();
+  const uniqueFindings: ResearchFinding[] = [];
+
+  for (const item of findings) {
+    const urlKey = item.url ? item.url.trim().toLowerCase() : item.title;
+    if (urlKey && !seenUrls.has(urlKey)) {
+      seenUrls.add(urlKey);
+      uniqueFindings.push(item);
+    }
+  }
+
+  return uniqueFindings
     .map(
       (item, idx) =>
         `[Source ${idx + 1}]\nTitle: ${item.title}\nURL: ${item.url}\nTopic Area: "${item.query}"\nExtracted Content: ${item.content}`
@@ -27,46 +37,58 @@ function formatFindingsForSynthesis(findings: ResearchFinding[]): string {
 }
 
 /**
- * Pure synthesis function for compiling structured research reports.
+ * Pure synthesis function for compiling structured research reports directly in Markdown with live token streaming.
  *
  * @param query - The user's original research query
  * @param researchData - All gathered research findings across all iterations
  * @param options - Optional model configuration options
- * @returns Validated SynthesizerOutput containing structured sections and full markdown
+ * @returns Complete synthesized Markdown document string
  */
 export async function synthesizeResearch(
   query: string,
   researchData: ResearchFinding[],
   options?: SynthesizerOptions
-): Promise<SynthesizerOutput> {
+): Promise<string> {
   const findingsContext = formatFindingsForSynthesis(researchData);
 
   try {
-    const { output } = await generateText({
-      model: getLLM(options?.model),
-      output: Output.object({
-        schema: SynthesizerOutputSchema,
-      }),
+    const result = streamText({
+      model: getLLM(options?.model || options?.role || 'reasoning'),
       system: getSynthesizerSystemPrompt(),
       prompt: `
 User Original Query:
 "${query}"
 
-Total Gathered Research Sources (${researchData.length}):
+Total Verified Research Sources (${researchData.length}):
 ${findingsContext}
 
-Synthesize all the above verified research findings into a comprehensive, authoritative research report directly answering the user query. Include inline citations and complete markdown formatting.
+Synthesize all the above verified research findings into an exhaustive, authoritative, beautifully structured research report directly answering the user query.
+
+CRITICAL CITATION RULES:
+1. Place clickable inline links [Domain / Source Title](URL) directly next to every fact, statistic, metric, timeline, and key statement so the reader can click and open the source instantly.
+2. NEVER use dead footnote tags or anchor numbers like [^1] or [Source 1](#source-1). Always embed the live URL: [Source Title](https://...).
+3. Conclude with a complete "## References & Sources" section listing all verified sources.
 `.trim(),
     });
 
-    if (!output) {
+    console.log(`\n========================================`);
+    console.log(`📝 Live Report Synthesis`);
+    console.log(`========================================\n`);
+
+    let fullReport = '';
+    for await (const chunk of result.textStream) {
+      process.stdout.write(chunk);
+      fullReport += chunk;
+    }
+
+    if (!fullReport.trim()) {
       throw new Error('Synthesizer agent produced an empty output.');
     }
 
-    return output;
+    return fullReport;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[Synthesizer Agent Error]: ${errorMessage}`);
+    console.error(`\n[Synthesizer Agent Error]: ${errorMessage}`);
     throw new Error(`Synthesis failed: ${errorMessage}`);
   }
 }
@@ -75,7 +97,7 @@ Synthesize all the above verified research findings into a comprehensive, author
  * LangGraph node handler for the Synthesizer agent.
  *
  * @param state - Current research state
- * @returns State updates containing structured synthesis and finalReport
+ * @returns State updates containing finalReport in direct markdown
  */
 export async function synthesizerNode(
   state: ResearchState
@@ -86,34 +108,13 @@ export async function synthesizerNode(
     `\n[Synthesizer Node] Compiling final research report from ${researchData.length} sources (Completed after ${depth} round(s))...`
   );
 
-  const synthesisResult = await synthesizeResearch(
+  const reportMarkdown = await synthesizeResearch(
     originalQuery,
     researchData
   );
 
-  console.log(`[Synthesizer] Report Title: "${synthesisResult.title}"`);
-  console.log(`[Synthesizer] Generated ${synthesisResult.sections.length} deep-dive section(s).`);
-
-  const report = [
-    `# ${synthesisResult.title}`,
-    `## Executive Summary\n${synthesisResult.executiveSummary}`,
-    ...synthesisResult.sections.map(s => {
-      const resolvedSources = s.sourcesUsed.map(src => {
-        const match = src.match(/Source\s*(\d+)/i);
-        if (match) {
-          const idx = parseInt(match[1], 10) - 1;
-          return researchData[idx]?.url || src;
-        }
-        return src;
-      });
-      const uniqueSources = [...new Set(resolvedSources)];
-      return `## ${s.heading}\n${s.content}\n\n*Sources:*\n${uniqueSources.map(url => `- ${url}`).join('\n')}`;
-    }),
-    `## Key Takeaways\n${synthesisResult.keyTakeaways.map(t => `- ${t}`).join('\n')}`
-  ].join('\n\n');
-
   return {
-    synthesis: synthesisResult,
-    finalReport: report,
+    finalReport: reportMarkdown,
   };
 }
+

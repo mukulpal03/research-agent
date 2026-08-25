@@ -1,4 +1,4 @@
-import { getCurrentDateFormatted } from '../utils';
+import { getCurrentDateFormatted } from "../utils";
 
 /**
  * Returns the Critic system prompt dynamically grounded with current date and budget guardrails.

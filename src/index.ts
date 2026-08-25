@@ -4,6 +4,7 @@ import * as readline from 'readline/promises';
 import { stdin as input, stdout as output } from 'process';
 import { env } from './config';
 import { researchWorkflow } from './graph';
+import { getActiveModelName } from './services';
 
 /**
  * Executes a research query through the LangGraph workflow.
@@ -41,24 +42,29 @@ export async function runResearch(query: string) {
   }
 
   if (finalState.finalReport) {
-    const randomId = Math.floor(Math.random() * 1000000);
-    const filename = `report-${randomId}.md`;
-    const filePath = path.join(process.cwd(), filename);
-    
-    fs.writeFileSync(filePath, finalState.finalReport);
-    console.log(`\n✅ Final report generated and saved to: ${filename}`);
+    if (finalState.gatekeeper?.decision === 'direct_answer') {
+      console.log(`\n--- Final Response ---`);
+      console.log(finalState.finalReport);
+    } else {
+      const randomId = Math.floor(Math.random() * 1000000);
+      const filename = `report-${randomId}.md`;
+      const filePath = path.join(process.cwd(), filename);
+      
+      fs.writeFileSync(filePath, finalState.finalReport);
+      console.log(`\n✅ Final report generated and saved to: ${filename}`);
+    }
   }
 
   return finalState;
 }
 
 async function main() {
-  const activeModel =
-    env.LLM_PROVIDER === 'bedrock' ? env.BEDROCK_MODEL : env.OPENAI_MODEL;
+  const fastModel = getActiveModelName('fast');
+  const reasoningModel = getActiveModelName('reasoning');
 
   console.log('🚀 Deep Research Agent System Initialized');
   console.log(
-    `Provider: ${env.LLM_PROVIDER} | Model: ${activeModel} | Max Depth: ${env.MAX_DEPTH}`
+    `Provider: ${env.LLM_PROVIDER} | Fast: ${fastModel} | Reasoning: ${reasoningModel} | Max Depth: ${env.MAX_DEPTH}`
   );
 
   // 1. Check if query was provided via CLI arguments (e.g. pnpm dev "what is x?")

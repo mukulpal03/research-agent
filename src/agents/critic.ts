@@ -46,7 +46,7 @@ export async function evaluateResearchWithCritic(
 
   try {
     const { output } = await generateText({
-      model: getLLM(options?.model),
+      model: getLLM(options?.model || options?.role || "fast"),
       output: Output.object({
         schema: CriticOutputSchema,
       }),
@@ -103,12 +103,19 @@ export async function criticNode(
   console.log(`[Critic] Is Satisfied: ${criticResult.isSatisfied}`);
 
   let updatedResearchData = researchData;
-  if (criticResult.rejectedSourceUrls && criticResult.rejectedSourceUrls.length > 0) {
+  if (
+    criticResult.rejectedSourceUrls &&
+    criticResult.rejectedSourceUrls.length > 0
+  ) {
     const rejectedSet = new Set(criticResult.rejectedSourceUrls);
-    updatedResearchData = researchData.filter(f => !f.url || !rejectedSet.has(f.url));
+    updatedResearchData = researchData.filter(
+      (f) => !f.url || !rejectedSet.has(f.url),
+    );
     const removedCount = researchData.length - updatedResearchData.length;
     if (removedCount > 0) {
-      console.log(`[Critic] 🗑️ Garbage Collection: Removed ${removedCount} irrelevant source(s) from the context.`);
+      console.log(
+        `[Critic] 🗑️ Garbage Collection: Removed ${removedCount} irrelevant source(s) from the context.`,
+      );
     }
   }
 

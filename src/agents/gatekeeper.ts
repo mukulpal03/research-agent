@@ -32,7 +32,7 @@ export async function evaluateQueryWithGatekeeper(
 
   try {
     const { output } = await generateText({
-      model: getLLM(options?.model),
+      model: getLLM(options?.model || options?.role || 'fast'),
       output: Output.object({
         schema: GatekeeperOutputSchema,
       }),
