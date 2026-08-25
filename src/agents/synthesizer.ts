@@ -94,8 +94,15 @@ export async function synthesizerNode(
   console.log(`[Synthesizer] Report Title: "${synthesisResult.title}"`);
   console.log(`[Synthesizer] Generated ${synthesisResult.sections.length} deep-dive section(s).`);
 
+  const report = [
+    `# ${synthesisResult.title}`,
+    `## Executive Summary\n${synthesisResult.executiveSummary}`,
+    ...synthesisResult.sections.map(s => `## ${s.heading}\n${s.content}\n\n*Sources:*\n${s.sourcesUsed.map(src => `- ${src}`).join('\n')}`),
+    `## Key Takeaways\n${synthesisResult.keyTakeaways.map(t => `- ${t}`).join('\n')}`
+  ].join('\n\n');
+
   return {
     synthesis: synthesisResult,
-    finalReport: synthesisResult.markdownReport,
+    finalReport: report,
   };
 }

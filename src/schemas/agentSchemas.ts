@@ -95,9 +95,6 @@ export const SynthesizerOutputSchema = z.object({
   keyTakeaways: z
     .array(z.string())
     .describe('Bullet point summary of critical takeaways and conclusions'),
-  markdownReport: z
-    .string()
-    .describe('Full formatted markdown document ready for presentation or export'),
 });
 
 export type SynthesizerOutput = z.infer<typeof SynthesizerOutputSchema>;

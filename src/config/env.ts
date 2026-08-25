@@ -22,9 +22,7 @@ const envSchema = z
     OPENAI_MODEL: z.string().default('gpt-4o-mini'),
 
     // Search Configuration
-    TAVILY_API_KEY: z
-      .string({ message: 'TAVILY_API_KEY is required in environment or .env file' })
-      .min(1, 'TAVILY_API_KEY cannot be empty'),
+    TAVILY_API_KEY: z.string().optional(),
 
     // General Runtime
     MAX_DEPTH: z.coerce
@@ -32,6 +30,16 @@ const envSchema = z
       .int('MAX_DEPTH must be an integer')
       .min(1, 'MAX_DEPTH must be at least 1')
       .default(2),
+    CONCURRENCY_LIMIT: z.coerce
+      .number()
+      .int('CONCURRENCY_LIMIT must be an integer')
+      .min(1, 'CONCURRENCY_LIMIT must be at least 1')
+      .default(5),
+    MAX_RESULTS_PER_QUERY: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .default(3),
 
     NODE_ENV: z
       .enum(['development', 'production', 'test'])
@@ -51,6 +59,14 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         message: 'OPENAI_API_KEY is required when LLM_PROVIDER is set to "openai"',
         path: ['OPENAI_API_KEY'],
+      });
+    }
+
+    if (!data.TAVILY_API_KEY || data.TAVILY_API_KEY.trim() === '') {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'TAVILY_API_KEY is required',
+        path: ['TAVILY_API_KEY'],
       });
     }
   });
