@@ -1,22 +1,20 @@
-import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
-import { createOpenAI } from '@ai-sdk/openai';
-import { env } from '../config';
+import { createBedrockMantle } from "@ai-sdk/amazon-bedrock/mantle";
+import { createOpenAI } from "@ai-sdk/openai";
+import { env } from "../config";
 
 /**
- * Centralized Amazon Bedrock provider instance configured with AWS credentials
+ * Centralized Bedrock Mantle provider instance (OpenAI-compatible Bedrock API)
  */
-export const bedrock = createAmazonBedrock({
-  region: env.AWS_REGION,
-  accessKeyId: env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: env.AWS_SECRET_ACCESS_KEY,
-  sessionToken: env.AWS_SESSION_TOKEN,
+export const bedrock = createBedrockMantle({
+  baseURL: env.BEDROCK_BASE_URL,
+  apiKey: env.BEDROCK_API_KEY,
 });
 
 /**
  * Centralized OpenAI provider instance (alternative/fallback)
  */
 export const openai = createOpenAI({
-  apiKey: env.OPENAI_API_KEY || '',
+  apiKey: env.OPENAI_API_KEY || "",
 });
 
 /**
@@ -26,9 +24,10 @@ export const openai = createOpenAI({
  * @returns LanguageModel instance
  */
 export function getLLM(modelName?: string) {
-  if (env.LLM_PROVIDER === 'bedrock') {
+  if (env.LLM_PROVIDER === "bedrock") {
     return bedrock(modelName || env.BEDROCK_MODEL);
   }
 
   return openai(modelName || env.OPENAI_MODEL);
 }
+

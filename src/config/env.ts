@@ -9,14 +9,12 @@ const envSchema = z
       .enum(['bedrock', 'openai'])
       .default('bedrock'),
 
-    // AWS Bedrock Configuration
-    AWS_ACCESS_KEY_ID: z.string().optional(),
-    AWS_SECRET_ACCESS_KEY: z.string().optional(),
-    AWS_REGION: z.string().default('us-east-1'),
-    AWS_SESSION_TOKEN: z.string().optional(),
+    // AWS Bedrock Mantle Configuration
+    BEDROCK_API_KEY: z.string().optional(),
+    BEDROCK_BASE_URL: z.string().optional(),
     BEDROCK_MODEL: z
       .string()
-      .default('anthropic.claude-3-5-sonnet-20241022-v2:0'),
+      .default('mistral.mistral-large-3-675b-instruct'),
 
     // OpenAI Configuration (Fallback/Alternative)
     OPENAI_API_KEY: z.string().optional(),
@@ -39,6 +37,14 @@ const envSchema = z
       .default('development'),
   })
   .superRefine((data, ctx) => {
+    if (data.LLM_PROVIDER === 'bedrock' && (!data.BEDROCK_API_KEY || data.BEDROCK_API_KEY.trim() === '')) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'BEDROCK_API_KEY is required when LLM_PROVIDER is set to "bedrock"',
+        path: ['BEDROCK_API_KEY'],
+      });
+    }
+
     if (data.LLM_PROVIDER === 'openai' && (!data.OPENAI_API_KEY || data.OPENAI_API_KEY.trim() === '')) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
