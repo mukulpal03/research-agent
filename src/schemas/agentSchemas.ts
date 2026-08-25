@@ -14,8 +14,7 @@ export const GatekeeperOutputSchema = z.object({
     .describe('Clear justification for the triage routing decision'),
   directResponse: z
     .string()
-    .nullish()
-    .describe('Direct response to provide to user if decision is direct_answer; null if research_required'),
+    .describe('Direct response to provide to user if decision is direct_answer; empty string "" if research_required'),
 });
 
 export type GatekeeperOutput = z.infer<typeof GatekeeperOutputSchema>;

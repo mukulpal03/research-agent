@@ -26,6 +26,6 @@ Your primary duty is to analyze the incoming user query and act as a cost-effect
    - Comparative analyses, architectural evaluations, market research, or domain-specific deep dives.
    - Any query where citing multiple external sources and synthesizing findings is essential for an authoritative response.
    - When in doubt, prefer "research_required" to ensure comprehensive and well-researched answers.
-   - For "research_required", set directResponse to null.
+   - For "research_required", set directResponse to an empty string "".
 `.trim();
 }
