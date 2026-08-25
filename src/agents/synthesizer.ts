@@ -1,6 +1,7 @@
 import { streamText } from 'ai';
 import { getLLM } from '../services';
 import { getSynthesizerSystemPrompt } from '../prompts';
+import { logger } from '../utils';
 import type { SynthesizerOptions } from '../types';
 import type {
   ResearchFinding,
@@ -71,10 +72,6 @@ CRITICAL CITATION RULES:
 `.trim(),
     });
 
-    console.log(`\n========================================`);
-    console.log(`📝 Live Report Synthesis`);
-    console.log(`========================================\n`);
-
     let fullReport = '';
     for await (const chunk of result.textStream) {
       process.stdout.write(chunk);
@@ -88,7 +85,7 @@ CRITICAL CITATION RULES:
     return fullReport;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`\n[Synthesizer Agent Error]: ${errorMessage}`);
+    logger.error(`Synthesis failed: ${errorMessage}`);
     throw new Error(`Synthesis failed: ${errorMessage}`);
   }
 }
@@ -104,9 +101,7 @@ export async function synthesizerNode(
 ): Promise<ResearchStateUpdate> {
   const { originalQuery, researchData, depth } = state;
 
-  console.log(
-    `\n[Synthesizer Node] Compiling final research report from ${researchData.length} sources (Completed after ${depth} round(s))...`
-  );
+  logger.synthesizerStart(researchData.length, depth);
 
   const reportMarkdown = await synthesizeResearch(
     originalQuery,
@@ -117,4 +112,5 @@ export async function synthesizerNode(
     finalReport: reportMarkdown,
   };
 }
+
 

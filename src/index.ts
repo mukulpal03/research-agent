@@ -5,6 +5,7 @@ import { stdin as input, stdout as output } from 'process';
 import { env } from './config';
 import { researchWorkflow } from './graph';
 import { getActiveModelName } from './services';
+import { logger, colors as c } from './utils';
 
 /**
  * Executes a research query through the LangGraph workflow.
@@ -12,48 +13,34 @@ import { getActiveModelName } from './services';
  * @param query - Input question or topic
  */
 export async function runResearch(query: string) {
-  console.log(`\n========================================`);
-  console.log(`🔎 Starting Research Workflow`);
-  console.log(`Query: "${query}"`);
-  console.log(`========================================`);
+  logger.researchGoal(query);
 
   const finalState = await researchWorkflow.invoke({
     originalQuery: query,
   });
 
-  console.log(`\n========================================`);
-  console.log(`🏁 Workflow Execution Completed`);
-  console.log(`========================================`);
-
-  if (finalState.gatekeeper) {
-    console.log(`Gatekeeper Decision: ${finalState.gatekeeper.decision}`);
-    console.log(`Gatekeeper Reasoning: ${finalState.gatekeeper.reasoning}`);
-  }
-
-  if (finalState.critic) {
-    console.log(`\n🧐 Critic Evaluation:`);
-    console.log(`  - Is Satisfied: ${finalState.critic.isSatisfied}`);
-    console.log(`  - Critique: ${finalState.critic.critique}`);
-    console.log(`  - Final Depth Reached: ${finalState.depth}/${env.MAX_DEPTH}`);
-  }
-
-  if (finalState.researchData && finalState.researchData.length > 0) {
-    console.log(`\n📚 Total Research Findings Gathered: ${finalState.researchData.length} source(s)`);
-  }
-
   if (finalState.finalReport) {
     if (finalState.gatekeeper?.decision === 'direct_answer') {
-      console.log(`\n--- Final Response ---`);
+      console.log(`\n${c.green}╭── 💬 DIRECT ANSWER ───────────────────────────────────────────────────${c.reset}`);
       console.log(finalState.finalReport);
+      console.log(`${c.green}╰────────────────────────────────────────────────────────────────────────${c.reset}\n`);
     } else {
       const randomId = Math.floor(Math.random() * 1000000);
       const filename = `report-${randomId}.md`;
       const filePath = path.join(process.cwd(), filename);
       
       fs.writeFileSync(filePath, finalState.finalReport);
-      console.log(`\n✅ Final report generated and saved to: ${filename}`);
+      logger.reportSaved(filename, filePath);
     }
   }
+
+  logger.workflowComplete({
+    decision: finalState.gatekeeper?.decision,
+    finalDepth: finalState.depth,
+    maxDepth: env.MAX_DEPTH,
+    totalSources: finalState.researchData?.length,
+    isSatisfied: finalState.critic?.isSatisfied,
+  });
 
   return finalState;
 }
@@ -62,10 +49,7 @@ async function main() {
   const fastModel = getActiveModelName('fast');
   const reasoningModel = getActiveModelName('reasoning');
 
-  console.log('🚀 Deep Research Agent System Initialized');
-  console.log(
-    `Provider: ${env.LLM_PROVIDER} | Fast: ${fastModel} | Reasoning: ${reasoningModel} | Max Depth: ${env.MAX_DEPTH}`
-  );
+  logger.banner(env.LLM_PROVIDER, fastModel, reasoningModel, env.MAX_DEPTH);
 
   // 1. Check if query was provided via CLI arguments (e.g. pnpm dev "what is x?")
   const cliArgsQuery = process.argv.slice(2).join(' ').trim();
@@ -78,11 +62,11 @@ async function main() {
   const rl = readline.createInterface({ input, output });
 
   try {
-    const userQuery = await rl.question('\n❓ Enter your research query: ');
+    const userQuery = await rl.question(`${c.bold}${c.brightCyan}❓ Enter your research query:${c.reset} `);
     const trimmed = userQuery.trim();
 
     if (!trimmed) {
-      console.log('⚠️  No query provided. Exiting.');
+      logger.warn('No query provided. Exiting.');
       return;
     }
 
@@ -95,7 +79,8 @@ async function main() {
 // Run main only when executing directly
 if (require.main === module) {
   main().catch((err) => {
-    console.error('Fatal execution error:', err);
+    logger.error(`Fatal execution error: ${err instanceof Error ? err.message : String(err)}`);
     process.exit(1);
   });
 }
+

@@ -1,6 +1,7 @@
 import { generateText, Output } from 'ai';
 import { getLLM } from '../services';
 import { getPlannerSystemPrompt } from '../prompts';
+import { logger } from '../utils';
 import type { PlannerOptions } from '../types';
 import {
   PlannerOutputSchema,
@@ -28,7 +29,7 @@ export async function generatePlan(
 
   try {
     const { output } = await generateText({
-      model: getLLM(options?.model || options?.role || 'reasoning'),
+      model: getLLM(options?.model || options?.role || 'fast'),
       output: Output.object({
         schema: PlannerOutputSchema,
       }),
@@ -43,7 +44,7 @@ export async function generatePlan(
     return output;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[Planner Agent Error]: ${errorMessage}`);
+    logger.error(`Planner failed to generate research plan: ${errorMessage}`);
     throw new Error(`Planner failed to generate research plan: ${errorMessage}`);
   }
 }
@@ -59,18 +60,13 @@ export async function plannerNode(
 ): Promise<ResearchStateUpdate> {
   const { originalQuery } = state;
 
-  console.log(`\n[Planner] Formulating research plan for: "${originalQuery}"`);
-
   const plan = await generatePlan(originalQuery);
 
-  console.log(`[Planner] Strategy: ${plan.planExplanation}`);
-  console.log(`[Planner] Generated Sub-Queries (${plan.subQueries.length}):`);
-  plan.subQueries.forEach((sq, idx) => {
-    console.log(`  ${idx + 1}. "${sq}"`);
-  });
+  logger.planner(plan.planExplanation, plan.subQueries);
 
   return {
     subQueries: plan.subQueries,
     depth: (state.depth || 0) + 1,
   };
 }
+

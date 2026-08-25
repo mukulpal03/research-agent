@@ -1,6 +1,7 @@
 import pLimit from 'p-limit';
 import { searchTavily } from '../services';
 import { env } from '../config';
+import { logger } from '../utils';
 import type {
   ResearchFinding,
   ResearchState,
@@ -39,23 +40,23 @@ export async function executeParallelResearch(
   existingUrls: Set<string> = new Set()
 ): Promise<ResearchFinding[]> {
   if (!subQueries || subQueries.length === 0) {
-    console.warn('[Researcher] No sub-queries provided for research.');
+    logger.warn('No sub-queries provided for research.');
     return [];
   }
-
-  console.log(
-    `[Researcher] Spawning ${subQueries.length} parallel research worker(s)...`
-  );
 
   const limit = pLimit(env.CONCURRENCY_LIMIT);
 
   const searchPromises = subQueries.map((query, index) => limit(async () => {
-    console.log(`  [Worker ${index + 1}] Searching: "${query}"`);
-    const findings = await executeSingleResearch(query, maxResultsPerQuery);
-    console.log(
-      `  [Worker ${index + 1}] Completed. Retrieved ${findings.length} source(s).`
-    );
-    return findings;
+    logger.workerStart(index + 1, query);
+    try {
+      const findings = await executeSingleResearch(query, maxResultsPerQuery);
+      logger.workerSuccess(index + 1, findings.length);
+      return findings;
+    } catch (err) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      logger.workerError(index + 1, query, errMsg);
+      return [];
+    }
   }));
 
   const settledResults = await Promise.allSettled(searchPromises);
@@ -73,16 +74,9 @@ export async function executeParallelResearch(
         }
       }
     } else {
-      console.error(
-        `  [Worker ${i + 1}] Failed for query "${subQueries[i]}":`,
-        result.reason
-      );
+      logger.workerError(i + 1, subQueries[i], String(result.reason));
     }
   }
-
-  console.log(
-    `[Researcher] Parallel research complete. Total findings gathered in this round: ${aggregatedFindings.length}`
-  );
 
   return aggregatedFindings;
 }
@@ -98,9 +92,7 @@ export async function researcherNode(
 ): Promise<ResearchStateUpdate> {
   const { subQueries, depth, researchData } = state;
 
-  console.log(
-    `\n[Researcher Node] Starting research execution for Depth Round ${depth}`
-  );
+  logger.researcherRoundStart(depth, env.MAX_DEPTH, subQueries.length);
 
   const existingUrls = new Set(researchData?.map(f => f.url).filter(Boolean) as string[]);
 
@@ -110,7 +102,11 @@ export async function researcherNode(
     existingUrls
   );
 
+  const updatedData = [...(researchData || []), ...newFindings];
+  logger.researcherRoundComplete(newFindings.length, updatedData.length);
+
   return {
-    researchData: [...(researchData || []), ...newFindings],
+    researchData: updatedData,
   };
 }
+

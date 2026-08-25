@@ -1,5 +1,6 @@
 import { tavily, type TavilyClient } from '@tavily/core';
 import { env } from '../config';
+import { logger } from '../utils';
 import type { ResearchFinding } from '../schemas';
 
 /**
@@ -33,7 +34,7 @@ export async function searchTavily(
     });
 
     if (!response.results || response.results.length === 0) {
-      console.warn(`[Tavily Search] No results found for query: "${trimmedQuery}"`);
+      logger.warn(`No search results found for: "${trimmedQuery}"`);
       return [];
     }
 
@@ -46,7 +47,8 @@ export async function searchTavily(
     }));
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[Tavily Search Error for "${trimmedQuery}"]: ${errorMessage}`);
+    logger.error(`Search error for "${trimmedQuery}": ${errorMessage}`);
     return [];
   }
 }
+

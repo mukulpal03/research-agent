@@ -1,6 +1,7 @@
 import { generateText, Output } from 'ai';
 import { getLLM } from '../services';
 import { getGatekeeperSystemPrompt } from '../prompts';
+import { logger } from '../utils';
 import type { GatekeeperOptions } from '../types';
 import {
   GatekeeperOutputSchema,
@@ -47,7 +48,7 @@ export async function evaluateQueryWithGatekeeper(
     return output;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[Gatekeeper Agent Error]: ${errorMessage}`);
+    logger.error(`Gatekeeper evaluation failed: ${errorMessage}`);
     throw new Error(`Gatekeeper evaluation failed: ${errorMessage}`);
   }
 }
@@ -63,13 +64,9 @@ export async function gatekeeperNode(
 ): Promise<ResearchStateUpdate> {
   const { originalQuery } = state;
 
-  console.log(`\n[Gatekeeper] Evaluating query: "${originalQuery}"`);
-
   const gatekeeperResult = await evaluateQueryWithGatekeeper(originalQuery);
 
-  console.log(
-    `[Gatekeeper] Decision: ${gatekeeperResult.decision} | Reasoning: ${gatekeeperResult.reasoning}`
-  );
+  logger.gatekeeper(gatekeeperResult.decision, gatekeeperResult.reasoning);
 
   if (gatekeeperResult.decision === 'direct_answer') {
     return {
@@ -84,3 +81,4 @@ export async function gatekeeperNode(
     gatekeeper: gatekeeperResult,
   };
 }
+

@@ -2,6 +2,7 @@ import { generateText, Output } from "ai";
 import { env } from "../config";
 import { getLLM } from "../services";
 import { getCriticSystemPrompt } from "../prompts";
+import { logger } from "../utils";
 import type { CriticOptions } from "../types";
 import {
   CriticOutputSchema,
@@ -72,7 +73,7 @@ Evaluate the research completeness against the original query. Decide if it is s
     return output;
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error(`[Critic Agent Error]: ${errorMessage}`);
+    logger.error(`Critic evaluation failed: ${errorMessage}`);
     throw new Error(`Critic evaluation failed: ${errorMessage}`);
   }
 }
@@ -89,20 +90,14 @@ export async function criticNode(
 ): Promise<ResearchStateUpdate> {
   const { originalQuery, researchData, depth } = state;
 
-  console.log(
-    `\n[Critic Node] Evaluating ${researchData.length} research finding(s) at Depth ${depth}/${env.MAX_DEPTH}...`,
-  );
-
   const criticResult = await evaluateResearchWithCritic(
     originalQuery,
     researchData,
     depth,
   );
 
-  console.log(`[Critic] Critique: ${criticResult.critique}`);
-  console.log(`[Critic] Is Satisfied: ${criticResult.isSatisfied}`);
-
   let updatedResearchData = researchData;
+  let purgedCount = 0;
   if (
     criticResult.rejectedSourceUrls &&
     criticResult.rejectedSourceUrls.length > 0
@@ -111,19 +106,12 @@ export async function criticNode(
     updatedResearchData = researchData.filter(
       (f) => !f.url || !rejectedSet.has(f.url),
     );
-    const removedCount = researchData.length - updatedResearchData.length;
-    if (removedCount > 0) {
-      console.log(
-        `[Critic] 🗑️ Garbage Collection: Removed ${removedCount} irrelevant source(s) from the context.`,
-      );
-    }
+    purgedCount = researchData.length - updatedResearchData.length;
   }
 
   // 1. Check if Max Recursion Depth is reached (Strict Hard Limit)
   if (depth >= env.MAX_DEPTH) {
-    console.log(
-      `[Critic] 🛑 Max recursion depth (${env.MAX_DEPTH}) reached. Halting recursion.`,
-    );
+    logger.criticMaxDepthReached(env.MAX_DEPTH, updatedResearchData.length);
 
     return {
       critic: {
@@ -136,9 +124,19 @@ export async function criticNode(
     };
   }
 
+  const constrainedSubQueries = (criticResult.nextSubQueries || []).slice(0, 3);
+
+  logger.criticEvaluation(
+    depth,
+    env.MAX_DEPTH,
+    criticResult.isSatisfied,
+    criticResult.critique,
+    constrainedSubQueries,
+    purgedCount
+  );
+
   // 2. If Critic is satisfied with the information
   if (criticResult.isSatisfied) {
-    console.log(`[Critic] ✅ Research is complete and sufficient.`);
     return {
       critic: {
         ...criticResult,
@@ -150,16 +148,6 @@ export async function criticNode(
   }
 
   // 3. If Critic found gaps and budget allows recursion
-  // Enforce breadth control: Max 3 follow-up queries to prevent token explosions
-  const constrainedSubQueries = (criticResult.nextSubQueries || []).slice(0, 3);
-
-  console.log(
-    `[Critic] 🔄 Identified gaps. Requesting ${constrainedSubQueries.length} follow-up sub-queries for Round ${depth + 1}:`,
-  );
-  constrainedSubQueries.forEach((q, i) => {
-    console.log(`  ${i + 1}. "${q}"`);
-  });
-
   return {
     critic: {
       ...criticResult,
@@ -171,3 +159,4 @@ export async function criticNode(
     researchData: updatedResearchData,
   };
 }
+
