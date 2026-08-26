@@ -1,16 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Header } from '../components/Header';
 import { SearchBar } from '../components/SearchBar';
 import { AgentChatFeed } from '../components/AgentChatFeed';
-import { HistorySidebar } from '../components/HistorySidebar';
 import { useResearchStream } from '../hooks/useResearchStream';
 import { AlertCircle, Compass } from 'lucide-react';
 
 export default function HomePage() {
-  const [historyOpen, setHistoryOpen] = useState(false);
-
   const {
     session,
     stage,
@@ -23,7 +20,6 @@ export default function HomePage() {
     workers,
     logs,
     startResearch,
-    loadPastSession,
     reset,
   } = useResearchStream();
 
@@ -31,17 +27,10 @@ export default function HomePage() {
     startResearch(query, maxDepth);
   };
 
-  const handleSelectPastSession = (id: string) => {
-    loadPastSession(id);
-  };
-
   return (
     <div className="min-h-screen bg-[#F5F5F5] flex flex-col justify-between">
       {/* Navigation Header */}
-      <Header
-        onOpenHistory={() => setHistoryOpen(true)}
-        onNewSearch={reset}
-      />
+      <Header onNewSearch={reset} />
 
       {/* Main Workspace Flow */}
       <main className="flex-1 pb-20 px-6 pt-6">
@@ -88,14 +77,6 @@ export default function HomePage() {
           )}
         </div>
       </main>
-
-      {/* History Archive Slide-Over Sidebar */}
-      <HistorySidebar
-        isOpen={historyOpen}
-        onClose={() => setHistoryOpen(false)}
-        onSelectSession={handleSelectPastSession}
-        currentSessionId={session?.id}
-      />
 
       {/* Footer */}
       <footer className="w-full bg-[#FFFFFF] border-t border-[#E9E6E6] py-8 text-center text-xs text-[#82817A] font-sans">

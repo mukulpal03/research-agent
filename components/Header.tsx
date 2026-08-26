@@ -4,11 +4,10 @@ import React from 'react';
 import { Sparkles, History, Compass } from 'lucide-react';
 
 interface HeaderProps {
-  onOpenHistory: () => void;
   onNewSearch: () => void;
 }
 
-export function Header({ onOpenHistory, onNewSearch }: HeaderProps) {
+export function Header({ onNewSearch }: HeaderProps) {
   return (
     <header className="w-full bg-[#024F46] text-white border-b border-white/10">
       <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -36,11 +35,11 @@ export function Header({ onOpenHistory, onNewSearch }: HeaderProps) {
         {/* Right Actions */}
         <div className="flex items-center gap-3">
           <button
-            onClick={onOpenHistory}
+            onClick={onNewSearch}
             className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-sm font-medium transition-colors cursor-pointer border border-white/10 active:scale-95"
           >
-            <History className="w-4 h-4 text-[#ECBA82]" />
-            <span>Research Archive</span>
+            <Sparkles className="w-4 h-4 text-[#ECBA82]" />
+            <span>New Research</span>
           </button>
         </div>
       </div>
