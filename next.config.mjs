@@ -7,11 +7,9 @@ const __dirname = path.dirname(__filename);
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  turbopack: {},
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   // Ensure server components can bundle dynamic AI SDK and LangGraph packages cleanly
   serverExternalPackages: [
