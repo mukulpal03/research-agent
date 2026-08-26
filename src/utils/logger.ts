@@ -87,11 +87,23 @@ function truncate(str: string, maxLen = 90): string {
   return str.length > maxLen ? str.slice(0, maxLen - 3) + '...' : str;
 }
 
+let isSilent = false;
+export function setSilentMode(val: boolean) {
+  isSilent = val;
+}
+
+function shouldLog(): boolean {
+  if (isSilent) return false;
+  if (process.env.NEXT_RUNTIME) return false;
+  return true;
+}
+
 export const logger = {
   /**
    * Main App Initialization Banner
    */
   banner(provider: string, fastModel: string, reasoningModel: string, maxDepth: number) {
+    if (!shouldLog()) return;
     const content = `${c.gray}Provider:${c.reset}   ${c.brightWhite}${provider}${c.reset}
 ${c.gray}Fast Model:${c.reset} ${c.yellow}${fastModel}${c.reset}
 ${c.gray}Reasoning:${c.reset}  ${c.magenta}${reasoningModel}${c.reset}
@@ -109,6 +121,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * User Research Query Box
    */
   researchGoal(query: string) {
+    if (!shouldLog()) return;
     console.log('\n' + boxen(`${c.bold}"${query}"${c.reset}`, {
       title: `${c.brightBlue}🔎 RESEARCH GOAL${c.reset}`,
       padding: { top: 0, bottom: 0, left: 1, right: 1 },
@@ -121,6 +134,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Gatekeeper Node Output
    */
   gatekeeper(decision: 'direct_answer' | 'research_required', reasoning: string) {
+    if (!shouldLog()) return;
     const isDirect = decision === 'direct_answer';
     const badge = isDirect
       ? `${c.bgGreen} ⚡ DIRECT ANSWER ${c.reset}`
@@ -139,6 +153,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Planner Node Output
    */
   planner(strategy: string, subQueries: string[]) {
+    if (!shouldLog()) return;
     let content = `${c.gray}Strategy:${c.reset}   ${c.dim}${strategy}${c.reset}\n`;
     content += `${c.gray}Generated Sub-Queries (${subQueries.length}):${c.reset}\n`;
     subQueries.forEach((sq, idx) => {
@@ -157,6 +172,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Researcher Round Header
    */
   researcherRoundStart(round: number, maxDepth: number, workerCount: number) {
+    if (!shouldLog()) return;
     console.log(`${c.yellow}┌─── 🔍 [Researcher Node] Depth Round ${round} of ${maxDepth}${c.reset}`);
     console.log(`${c.yellow}│${c.reset}  ${c.gray}Spawning ${workerCount} concurrent search worker(s)...${c.reset}`);
   },
@@ -165,6 +181,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Single Worker Search Start
    */
   workerStart(index: number, query: string) {
+    if (!shouldLog()) return;
     console.log(`${c.yellow}│${c.reset}   ${c.gray}├─ [Worker ${index}]${c.reset} ⚡ Searching: ${c.dim}"${truncate(query, 75)}"${c.reset}`);
   },
 
@@ -172,6 +189,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Single Worker Completion
    */
   workerSuccess(index: number, sourceCount: number) {
+    if (!shouldLog()) return;
     console.log(`${c.yellow}│${c.reset}   ${c.gray}│  └─${c.reset} ${c.green}✓ Retrieved ${sourceCount} source(s)${c.reset}`);
   },
 
@@ -179,6 +197,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Single Worker Error
    */
   workerError(index: number, query: string, error: string) {
+    if (!shouldLog()) return;
     console.log(`${c.yellow}│${c.reset}   ${c.gray}│  └─${c.reset} ${c.red}✗ Search failed: ${truncate(error, 60)}${c.reset}`);
   },
 
@@ -186,6 +205,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Researcher Round Complete
    */
   researcherRoundComplete(roundSources: number, totalAccumulated: number) {
+    if (!shouldLog()) return;
     console.log(`${c.yellow}│${c.reset}  ${c.green}✓ Round Complete:${c.reset} ${c.bold}${roundSources} new finding(s)${c.reset} ${c.gray}(Total Pool: ${totalAccumulated} sources)${c.reset}`);
     console.log(`${c.yellow}└───${c.reset}\n`);
   },
@@ -201,6 +221,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
     nextQueries: string[],
     purgedCount: number
   ) {
+    if (!shouldLog()) return;
     const badge = isSatisfied
       ? `${c.bgGreen} ✅ SATISFIED — COMPLETE ${c.reset}`
       : `${c.bgYellow} 🔄 GAPS IDENTIFIED — RECURSION REQUIRED ${c.reset}`;
@@ -231,6 +252,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Critic Max Depth Notice
    */
   criticMaxDepthReached(maxDepth: number, totalSources: number) {
+    if (!shouldLog()) return;
     const content = `Proceeding directly to final report synthesis with ${c.bold}${totalSources} verified sources${c.reset}.`;
     console.log(boxen(content, {
       title: `${c.yellow}🛑 [Critic Agent] Max Recursion Depth Budget Reached (${maxDepth}/${maxDepth})${c.reset}`,
@@ -244,6 +266,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Synthesizer Node Start & Stream Header
    */
   synthesizerStart(sourceCount: number, depth: number) {
+    if (!shouldLog()) return;
     console.log(`${c.brightGreen}┌─── 📝 [Synthesizer Agent] Compiling Final Research Report${c.reset}`);
     console.log(`${c.brightGreen}│${c.reset}  Synthesizing insights from ${c.bold}${sourceCount} sources${c.reset} after ${c.bold}${depth} round(s)...`);
     console.log(`${c.brightGreen}│${c.reset}  Streaming publication-grade Markdown with clickable inline citations...`);
@@ -254,6 +277,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Report Saved Success Box
    */
   reportSaved(filename: string, fullPath: string) {
+    if (!shouldLog()) return;
     const content = `${c.gray}Filename:${c.reset}  ${c.bold}${c.brightWhite}${filename}${c.reset}\n${c.gray}Location:${c.reset}  ${c.dim}${fullPath}${c.reset}`;
     console.log('\n' + boxen(content, {
       title: `${c.green}✅ REPORT GENERATED & PERSISTED${c.reset}`,
@@ -273,6 +297,7 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
     totalSources?: number;
     isSatisfied?: boolean;
   }) {
+    if (!shouldLog()) return;
     let content = '';
     
     if (stats.decision) {
@@ -297,14 +322,17 @@ ${c.gray}Max Depth:${c.reset}  ${c.green}${maxDepth} recursive rounds${c.reset}`
    * Generic Helpers
    */
   info(msg: string) {
+    if (!shouldLog()) return;
     console.log(`${c.blue}ℹ${c.reset}  ${msg}`);
   },
 
   warn(msg: string) {
+    if (!shouldLog()) return;
     console.log(`${c.yellow}⚠${c.reset}  ${c.yellow}${msg}${c.reset}`);
   },
 
   error(msg: string) {
+    if (!shouldLog()) return;
     console.log(`${c.red}✖${c.reset}  ${c.red}${msg}${c.reset}`);
   },
 };

@@ -58,11 +58,13 @@ export async function generatePlan(
 export async function plannerNode(
   state: ResearchState
 ): Promise<ResearchStateUpdate> {
-  const { originalQuery } = state;
+  const { originalQuery, sessionId } = state;
 
   const plan = await generatePlan(originalQuery);
 
-  logger.planner(plan.planExplanation, plan.subQueries);
+  if (!sessionId) {
+    logger.planner(plan.planExplanation, plan.subQueries);
+  }
 
   return {
     subQueries: plan.subQueries,

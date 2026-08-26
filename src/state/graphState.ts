@@ -20,6 +20,14 @@ export const ResearchStateAnnotation = Annotation.Root({
   }),
 
   /**
+   * Optional unique session ID for real-time SSE event dispatching
+   */
+  sessionId: Annotation<string | undefined>({
+    reducer: (_, next) => next,
+    default: () => undefined,
+  }),
+
+  /**
    * Gatekeeper evaluation output (triage decision, reasoning, optional direct response)
    */
   gatekeeper: Annotation<GatekeeperOutput | undefined>({

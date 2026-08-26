@@ -62,11 +62,13 @@ export async function evaluateQueryWithGatekeeper(
 export async function gatekeeperNode(
   state: ResearchState
 ): Promise<ResearchStateUpdate> {
-  const { originalQuery } = state;
+  const { originalQuery, sessionId } = state;
 
   const gatekeeperResult = await evaluateQueryWithGatekeeper(originalQuery);
 
-  logger.gatekeeper(gatekeeperResult.decision, gatekeeperResult.reasoning);
+  if (!sessionId) {
+    logger.gatekeeper(gatekeeperResult.decision, gatekeeperResult.reasoning);
+  }
 
   if (gatekeeperResult.decision === 'direct_answer') {
     return {

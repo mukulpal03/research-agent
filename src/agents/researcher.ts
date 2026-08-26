@@ -37,24 +37,73 @@ export async function executeSingleResearch(
 export async function executeParallelResearch(
   subQueries: string[],
   maxResultsPerQuery: number = env.MAX_RESULTS_PER_QUERY,
-  existingUrls: Set<string> = new Set()
+  existingUrls: Set<string> = new Set(),
+  sessionId?: string
 ): Promise<ResearchFinding[]> {
   if (!subQueries || subQueries.length === 0) {
-    logger.warn('No sub-queries provided for research.');
+    if (!sessionId) logger.warn('No sub-queries provided for research.');
     return [];
   }
 
   const limit = pLimit(env.CONCURRENCY_LIMIT);
 
   const searchPromises = subQueries.map((query, index) => limit(async () => {
-    logger.workerStart(index + 1, query);
+    if (!sessionId) {
+      logger.workerStart(index + 1, query);
+    } else {
+      try {
+        const { eventDispatcher } = require('@/lib/events');
+        eventDispatcher.emitEvent(sessionId, 'WORKER_STATUS', {
+          workerIndex: index + 1,
+          query,
+          status: 'searching',
+        });
+        eventDispatcher.emitEvent(sessionId, 'LOG_MESSAGE', {
+          message: `Worker ${index + 1} searching: "${query}"`,
+          type: 'info',
+        });
+      } catch {}
+    }
+
     try {
       const findings = await executeSingleResearch(query, maxResultsPerQuery);
-      logger.workerSuccess(index + 1, findings.length);
+      if (!sessionId) {
+        logger.workerSuccess(index + 1, findings.length);
+      } else {
+        try {
+          const { eventDispatcher } = require('@/lib/events');
+          eventDispatcher.emitEvent(sessionId, 'WORKER_STATUS', {
+            workerIndex: index + 1,
+            query,
+            status: 'completed',
+            sourcesCount: findings.length,
+          });
+          eventDispatcher.emitEvent(sessionId, 'LOG_MESSAGE', {
+            message: `Worker ${index + 1} retrieved ${findings.length} source(s)`,
+            type: 'success',
+          });
+        } catch {}
+      }
       return findings;
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
-      logger.workerError(index + 1, query, errMsg);
+      if (!sessionId) {
+        logger.workerError(index + 1, query, errMsg);
+      } else {
+        try {
+          const { eventDispatcher } = require('@/lib/events');
+          eventDispatcher.emitEvent(sessionId, 'WORKER_STATUS', {
+            workerIndex: index + 1,
+            query,
+            status: 'failed',
+            error: errMsg,
+          });
+          eventDispatcher.emitEvent(sessionId, 'LOG_MESSAGE', {
+            message: `Worker ${index + 1} failed: ${errMsg}`,
+            type: 'error',
+          });
+        } catch {}
+      }
       return [];
     }
   }));
@@ -74,7 +123,7 @@ export async function executeParallelResearch(
         }
       }
     } else {
-      logger.workerError(i + 1, subQueries[i], String(result.reason));
+      if (!sessionId) logger.workerError(i + 1, subQueries[i], String(result.reason));
     }
   }
 
@@ -90,20 +139,25 @@ export async function executeParallelResearch(
 export async function researcherNode(
   state: ResearchState
 ): Promise<ResearchStateUpdate> {
-  const { subQueries, depth, researchData } = state;
+  const { subQueries, depth, researchData, sessionId } = state;
 
-  logger.researcherRoundStart(depth, env.MAX_DEPTH, subQueries.length);
+  if (!sessionId) {
+    logger.researcherRoundStart(depth, env.MAX_DEPTH, subQueries.length);
+  }
 
   const existingUrls = new Set(researchData?.map(f => f.url).filter(Boolean) as string[]);
 
   const newFindings = await executeParallelResearch(
     subQueries,
     env.MAX_RESULTS_PER_QUERY,
-    existingUrls
+    existingUrls,
+    sessionId
   );
 
   const updatedData = [...(researchData || []), ...newFindings];
-  logger.researcherRoundComplete(newFindings.length, updatedData.length);
+  if (!sessionId) {
+    logger.researcherRoundComplete(newFindings.length, updatedData.length);
+  }
 
   return {
     researchData: updatedData,

@@ -75,10 +75,22 @@ CRITICAL CITATION RULES:
 
     let fullReport = '';
     for await (const chunk of result.textStream) {
-      process.stdout.write(chunk);
+      if (options?.onChunk) {
+        options.onChunk(chunk);
+      }
+      if (options?.sessionId) {
+        try {
+          const { eventDispatcher } = require('@/lib/events');
+          eventDispatcher.emitEvent(options.sessionId, 'SYNTHESIS_CHUNK', { chunk });
+        } catch {}
+      } else if (!options?.silent) {
+        process.stdout.write(chunk);
+      }
       fullReport += chunk;
     }
-    process.stdout.write('\n');
+    if (!options?.sessionId && !options?.silent) {
+      process.stdout.write('\n');
+    }
 
     const finishReason = await result.finishReason;
     if (finishReason === 'length') {
@@ -108,13 +120,16 @@ CRITICAL CITATION RULES:
 export async function synthesizerNode(
   state: ResearchState
 ): Promise<ResearchStateUpdate> {
-  const { originalQuery, researchData, depth } = state;
+  const { originalQuery, researchData, depth, sessionId } = state;
 
-  logger.synthesizerStart(researchData.length, depth);
+  if (!sessionId) {
+    logger.synthesizerStart(researchData.length, depth);
+  }
 
   const reportMarkdown = await synthesizeResearch(
     originalQuery,
-    researchData
+    researchData,
+    { sessionId }
   );
 
   return {

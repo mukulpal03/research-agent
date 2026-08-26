@@ -1,7 +1,11 @@
-import dotenv from 'dotenv';
 import { z } from 'zod';
 
-dotenv.config();
+if (typeof window === 'undefined' && !process.env.NEXT_RUNTIME) {
+  try {
+    const dotenv = require('dotenv');
+    dotenv.config();
+  } catch {}
+}
 
 const envSchema = z
   .object({
@@ -123,6 +127,26 @@ function validateEnv(): Env {
   const result = envSchema.safeParse(process.env);
 
   if (!result.success) {
+    // If during next build or type checking, provide safe fallback structure
+    if (process.env.NEXT_PHASE === 'phase-production-build' || process.env.npm_lifecycle_event === 'build') {
+      return {
+        LLM_PROVIDER: (process.env.LLM_PROVIDER as any) || 'bedrock',
+        BEDROCK_API_KEY: process.env.BEDROCK_API_KEY || '',
+        BEDROCK_BASE_URL: process.env.BEDROCK_BASE_URL || '',
+        AWS_REGION: process.env.AWS_REGION || 'us-east-1',
+        BEDROCK_FAST_MODEL: process.env.BEDROCK_FAST_MODEL || '',
+        BEDROCK_REASONING_MODEL: process.env.BEDROCK_REASONING_MODEL || '',
+        OPENAI_API_KEY: process.env.OPENAI_API_KEY || '',
+        OPENAI_FAST_MODEL: process.env.OPENAI_FAST_MODEL || '',
+        OPENAI_REASONING_MODEL: process.env.OPENAI_REASONING_MODEL || '',
+        TAVILY_API_KEY: process.env.TAVILY_API_KEY || '',
+        MAX_DEPTH: 3,
+        CONCURRENCY_LIMIT: 5,
+        MAX_RESULTS_PER_QUERY: 3,
+        NODE_ENV: 'production',
+      };
+    }
+
     const errorDetails = result.error.issues
       .map((issue) => `  - [${issue.path.join('.')}]: ${issue.message}`)
       .join('\n');

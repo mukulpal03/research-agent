@@ -92,7 +92,7 @@ Evaluate the research completeness against the original query. Decide if it is s
 export async function criticNode(
   state: ResearchState,
 ): Promise<ResearchStateUpdate> {
-  const { originalQuery, researchData, depth } = state;
+  const { originalQuery, researchData, depth, sessionId } = state;
 
   const criticResult = await evaluateResearchWithCritic(
     originalQuery,
@@ -116,7 +116,9 @@ export async function criticNode(
 
   // 1. Check if Max Recursion Depth is reached (Strict Hard Limit)
   if (depth >= env.MAX_DEPTH) {
-    logger.criticMaxDepthReached(env.MAX_DEPTH, updatedResearchData.length);
+    if (!sessionId) {
+      logger.criticMaxDepthReached(env.MAX_DEPTH, updatedResearchData.length);
+    }
 
     return {
       critic: {
@@ -131,14 +133,16 @@ export async function criticNode(
 
   const constrainedSubQueries = (criticResult.nextSubQueries || []).slice(0, 3);
 
-  logger.criticEvaluation(
-    depth,
-    env.MAX_DEPTH,
-    criticResult.isSatisfied,
-    criticResult.critique,
-    constrainedSubQueries,
-    purgedCount
-  );
+  if (!sessionId) {
+    logger.criticEvaluation(
+      depth,
+      env.MAX_DEPTH,
+      criticResult.isSatisfied,
+      criticResult.critique,
+      constrainedSubQueries,
+      purgedCount
+    );
+  }
 
   // 2. If Critic is satisfied with the information
   if (criticResult.isSatisfied) {

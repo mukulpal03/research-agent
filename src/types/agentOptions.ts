@@ -12,7 +12,11 @@ export interface AgentExecutionOptions {
 export type GatekeeperOptions = AgentExecutionOptions;
 export type PlannerOptions = AgentExecutionOptions;
 export type CriticOptions = AgentExecutionOptions;
-export type SynthesizerOptions = AgentExecutionOptions;
+export interface SynthesizerOptions extends AgentExecutionOptions {
+  onChunk?: (chunk: string) => void;
+  sessionId?: string;
+  silent?: boolean;
+}
 
 /**
  * Options for Researcher execution
