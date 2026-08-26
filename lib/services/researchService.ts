@@ -42,13 +42,29 @@ export class ResearchService {
 
       const finalSession = memoryStore.getSession(sessionId);
       if (finalSession && finalSession.status !== 'completed' && finalSession.status !== 'failed') {
-        const report = finalSession.finalReport || '';
-        memoryStore.completeSession(sessionId, report);
-        eventDispatcher.emitEvent(sessionId, 'RESEARCH_COMPLETE', {
-          session: memoryStore.getSession(sessionId),
-        });
+        const isDirect = finalSession.gatekeeper?.decision === 'direct_answer';
+        if (!isDirect && (!finalSession.sources || finalSession.sources.length === 0)) {
+          const errorMsg = 'Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)';
+          memoryStore.failSession(sessionId, errorMsg);
+          eventDispatcher.emitEvent(sessionId, 'RESEARCH_ERROR', {
+            error: errorMsg,
+          });
+        } else if (finalSession.finalReport) {
+          memoryStore.completeSession(sessionId, finalSession.finalReport);
+          eventDispatcher.emitEvent(sessionId, 'RESEARCH_COMPLETE', {
+            session: memoryStore.getSession(sessionId),
+          });
+        } else {
+          const errorMsg = 'Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)';
+          memoryStore.failSession(sessionId, errorMsg);
+          eventDispatcher.emitEvent(sessionId, 'RESEARCH_ERROR', {
+            error: errorMsg,
+          });
+        }
       }
 
+      // Small delay to ensure event is fully transmitted across SSE stream before closing
+      await new Promise((resolve) => setTimeout(resolve, 500));
       eventDispatcher.closeSessionStreams(sessionId);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);

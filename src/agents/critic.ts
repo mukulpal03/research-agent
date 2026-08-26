@@ -94,6 +94,10 @@ export async function criticNode(
 ): Promise<ResearchStateUpdate> {
   const { originalQuery, researchData, depth, sessionId } = state;
 
+  if (!researchData || researchData.length === 0) {
+    throw new Error('Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)');
+  }
+
   const criticResult = await evaluateResearchWithCritic(
     originalQuery,
     researchData,
