@@ -63,9 +63,21 @@ cp .env.example .env
 Inside your `.env` file, ensure you have set:
 - `LLM_PROVIDER` (e.g., `bedrock` or `openai`)
 - `BEDROCK_API_KEY` (if using AWS Bedrock)
+- `BEDROCK_FAST_MODEL` (e.g., `mistral.ministral-3-14b-instruct`)
+- `BEDROCK_REASONING_MODEL` (e.g., `mistral.mistral-large-3-675b-instruct`)
 - `TAVILY_API_KEY`
-- `MAX_DEPTH` (Recommendation: `3`)
-- `MAX_RESULTS_PER_QUERY`
+- `MAX_DEPTH` (Recommendation: `2` or `3`)
+- `MAX_RESULTS_PER_QUERY` (Recommendation: `15`)
+
+> [!NOTE]
+> **Recommended Bedrock Models:**
+> I strongly recommend using the **Mistral** models on AWS Bedrock:
+> - **Fast Model:** `mistral.ministral-3-14b-instruct`
+> - **Reasoning Model:** `mistral.mistral-large-3-675b-instruct`
+> 
+> Most other Bedrock models were throwing configuration and formatting errors during development, so the agent has been primarily developed, tested, and optimized with Mistral. 
+> 
+> *Alternatively, you can also use the **OpenAI** provider (`LLM_PROVIDER=openai`) with `OPENAI_API_KEY`, `OPENAI_FAST_MODEL=gpt-4o-mini`, and `OPENAI_REASONING_MODEL=gpt-4o`. Or GPT-5 family*
 
 ### 3. Run the Agent
 The application features a continuous chat loop. You can start it in development mode using `tsx`:
