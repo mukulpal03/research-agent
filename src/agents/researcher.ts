@@ -104,6 +104,11 @@ export async function executeParallelResearch(
           });
         } catch {}
       }
+
+      if (errMsg.includes('Tavily free limit is exhausted')) {
+        throw err;
+      }
+
       return [];
     }
   }));
@@ -123,7 +128,11 @@ export async function executeParallelResearch(
         }
       }
     } else {
-      if (!sessionId) logger.workerError(i + 1, subQueries[i], String(result.reason));
+      const reasonMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+      if (reasonMsg.includes('Tavily free limit is exhausted')) {
+        throw new Error(reasonMsg);
+      }
+      if (!sessionId) logger.workerError(i + 1, subQueries[i], reasonMsg);
     }
   }
 

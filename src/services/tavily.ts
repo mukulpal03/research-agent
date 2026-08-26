@@ -47,6 +47,26 @@ export async function searchTavily(
     }));
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const lower = errorMessage.toLowerCase();
+
+    const isLimitOrQuotaError =
+      lower.includes('limit') ||
+      lower.includes('quota') ||
+      lower.includes('credit') ||
+      lower.includes('rate') ||
+      lower.includes('429') ||
+      lower.includes('432') ||
+      lower.includes('403') ||
+      lower.includes('unauthorized') ||
+      lower.includes('forbidden') ||
+      lower.includes('plan');
+
+    if (isLimitOrQuotaError) {
+      const friendlyMsg = 'Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)';
+      logger.error(`Tavily API limit error: ${errorMessage}`);
+      throw new Error(friendlyMsg);
+    }
+
     logger.error(`Search error for "${trimmedQuery}": ${errorMessage}`);
     return [];
   }

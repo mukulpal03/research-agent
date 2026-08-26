@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Header } from '../components/Header';
-import { SearchBar } from '../components/SearchBar';
-import { AgentChatFeed } from '../components/AgentChatFeed';
-import { useResearchStream } from '../hooks/useResearchStream';
-import { AlertCircle, Compass } from 'lucide-react';
+import React from "react";
+import { Header } from "../components/Header";
+import { SearchBar } from "../components/SearchBar";
+import { AgentChatFeed } from "../components/AgentChatFeed";
+import { useResearchStream } from "../hooks/useResearchStream";
+import { AlertCircle, Compass } from "lucide-react";
 
 export default function HomePage() {
   const {
@@ -37,17 +37,6 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto space-y-6">
           {/* Sleek Top Search & Depth Input Bar */}
           <SearchBar onSearch={handleSearch} isLoading={isStreaming} />
-          {/* Error Message Toast/Alert */}
-          {error && (
-            <div className="p-4 rounded-2xl bg-red-50 border border-red-200 text-red-800 flex items-start gap-3 animate-in fade-in duration-200">
-              <AlertCircle className="w-5 h-5 shrink-0 text-red-600 mt-0.5" />
-              <div className="text-sm">
-                <p className="font-semibold">Research Error</p>
-                <p className="mt-0.5">{error}</p>
-              </div>
-            </div>
-          )}
-
           {/* Terminal-Inspired Multi-Agent Chat & Execution Timeline */}
           {session && (
             <AgentChatFeed
@@ -58,6 +47,7 @@ export default function HomePage() {
               sources={sources}
               reportMarkdown={reportMarkdown}
               workers={workers}
+              error={error}
             />
           )}
 
@@ -71,7 +61,8 @@ export default function HomePage() {
                 Awaiting your research inquiry
               </h3>
               <p className="text-sm text-[#82817A] mt-2 leading-relaxed">
-                Enter any question above to watch Gatekeeper, Planner, Researchers, Critic, and Synthesizer coordinate in real time.
+                Enter any question above to watch Gatekeeper, Planner,
+                Researchers, Critic, and Synthesizer coordinate in real time.
               </p>
             </div>
           )}
@@ -86,9 +77,6 @@ export default function HomePage() {
               Deep Research Agent
             </span>
             <span>• Built with LangGraph, Bedrock / OpenAI & Tavily</span>
-          </div>
-          <div className="text-xs text-[#57564C]">
-            Organic Multi-Agent Architecture
           </div>
         </div>
       </footer>

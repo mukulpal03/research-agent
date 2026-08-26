@@ -22,6 +22,7 @@ import {
   Clock,
   ArrowRight,
   ArrowDown,
+  AlertTriangle,
 } from 'lucide-react';
 import type {
   ResearchSession,
@@ -39,6 +40,7 @@ interface AgentChatFeedProps {
   sources: ResearchFinding[];
   reportMarkdown: string;
   workers: WorkerStatusPayload[];
+  error?: string | null;
 }
 
 export function AgentChatFeed({
@@ -49,6 +51,7 @@ export function AgentChatFeed({
   sources,
   reportMarkdown,
   workers,
+  error,
 }: AgentChatFeedProps) {
   const [copied, setCopied] = useState(false);
   const [showSources, setShowSources] = useState(false);
@@ -342,8 +345,30 @@ export function AgentChatFeed({
         </div>
       )}
 
+      {/* Friendly Error / Tavily Exhausted Alert Banner */}
+      {(error || stage === 'failed' || session.status === 'failed') && (
+        <div className="bg-[#FFF8F0] rounded-2xl p-6 border-2 border-[#ECBA82] shadow-sm animate-in fade-in space-y-2">
+          <div className="flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+              <AlertTriangle className="w-5 h-5" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="font-editorial text-xl text-[#2E2E2E] font-medium">
+                Research Retrieval Notice
+              </h4>
+              <p className="text-sm sm:text-base text-amber-950 leading-relaxed font-sans font-medium">
+                {error || 'Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)'}
+              </p>
+              <p className="text-xs text-[#82817A] mt-1">
+                The research process was intentionally halted to prevent generating unverified or hallucinated findings.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 5. Critic Agent Card */}
-      {!isDirectAnswer && (session.criticHistory?.length > 0 || stage === 'critic') && (
+      {!isDirectAnswer && session.status !== 'failed' && (session.criticHistory?.length > 0 || stage === 'critic') && (
         <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#E9E6E6] shadow-sm">
           <div className="flex items-center justify-between gap-2 mb-3 pb-3 border-b border-[#E9E6E6]">
             <div className="flex items-center gap-2.5">
@@ -435,7 +460,7 @@ export function AgentChatFeed({
       )}
 
       {/* 6. Synthesizer Agent Report Card (Live Token Stream) */}
-      {!isDirectAnswer && (reportMarkdown || stage === 'synthesizer' || stage === 'completed') && (
+      {!isDirectAnswer && session.status !== 'failed' && (reportMarkdown || stage === 'synthesizer' || stage === 'completed') && (
         <div className="bg-[#FFFFFF] rounded-3xl p-6 md:p-8 border-2 border-[#024F46]/30 shadow-lg space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E9E6E6]">

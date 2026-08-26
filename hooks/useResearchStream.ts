@@ -293,7 +293,9 @@ export function useResearchStream(): UseResearchStreamReturn {
           }
 
           case 'RESEARCH_ERROR': {
-            setError(data.error || 'An unexpected error occurred during research.');
+            const errorMsg = data.error || 'An unexpected error occurred during research.';
+            setError(errorMsg);
+            setSession((prev) => (prev ? { ...prev, status: 'failed' } : null));
             setStage('failed');
             setIsStreaming(false);
             eventSource.close();
