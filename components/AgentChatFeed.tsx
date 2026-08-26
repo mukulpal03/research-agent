@@ -288,11 +288,19 @@ export function AgentChatFeed({
                     )}
                   </div>
 
-                  {w.status === 'completed' && (
+                  {w.status === 'completed' && (w.sourcesCount ?? 0) > 0 && (
                     <div className="pl-6 text-emerald-400 flex items-center gap-1">
                       <span>│  └─</span>
                       <Check className="w-3 h-3" />
-                      <span>Retrieved {w.sourcesCount ?? 0} verified source(s)</span>
+                      <span>Retrieved {w.sourcesCount} verified source(s)</span>
+                    </div>
+                  )}
+
+                  {(w.status === 'failed' || (w.status === 'completed' && (w.sourcesCount ?? 0) === 0)) && (
+                    <div className="pl-6 text-amber-400 flex items-center gap-1">
+                      <span>│  └─</span>
+                      <AlertTriangle className="w-3 h-3 text-amber-400" />
+                      <span>Limit exhausted (0 sources)</span>
                     </div>
                   )}
                 </div>

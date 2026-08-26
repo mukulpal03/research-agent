@@ -58,6 +58,9 @@ export class ResearchService {
       eventDispatcher.emitEvent(sessionId, 'RESEARCH_ERROR', {
         error: errorMessage,
       });
+
+      // Small delay to ensure event is fully transmitted across SSE stream before closing
+      await new Promise((resolve) => setTimeout(resolve, 500));
       eventDispatcher.closeSessionStreams(sessionId);
     }
   }
@@ -130,6 +133,15 @@ export class ResearchService {
         const lastCount = getLastSourceCount();
         const newFindings = researchData.slice(lastCount);
         setLastSourceCount(researchData.length);
+
+        if (researchData.length === 0) {
+          const errorMsg = 'Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)';
+          memoryStore.failSession(sessionId, errorMsg);
+          eventDispatcher.emitEvent(sessionId, 'RESEARCH_ERROR', {
+            error: errorMsg,
+          });
+          return;
+        }
 
         memoryStore.addSources(sessionId, newFindings);
 

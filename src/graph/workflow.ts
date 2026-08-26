@@ -44,6 +44,17 @@ export function routeCritic(state: ResearchState): 'synthesizer_node' | 'researc
 }
 
 /**
+ * Conditional edge router after Researcher node execution.
+ * If 0 findings were gathered (e.g. Tavily search failed / limit exhausted), stops execution immediately.
+ */
+export function routeResearcher(state: ResearchState): typeof END | 'critic_node' {
+  if (!state.researchData || state.researchData.length === 0) {
+    return END;
+  }
+  return 'critic_node';
+}
+
+/**
  * Creates and compiles the complete LangGraph StateGraph for the Recursive Research System.
  */
 export function createResearchWorkflow() {
@@ -67,8 +78,11 @@ export function createResearchWorkflow() {
     // 4. Edge: planner_node -> researcher_node
     .addEdge('planner_node', 'researcher_node')
 
-    // 5. Edge: researcher_node -> critic_node
-    .addEdge('researcher_node', 'critic_node')
+    // 5. Conditional Routing after Researcher (Halt if 0 sources vs Proceed to Critic)
+    .addConditionalEdges('researcher_node', routeResearcher, {
+      [END]: END,
+      critic_node: 'critic_node',
+    })
 
     // 6. Conditional Recursive Routing after Critic (Loop back or Synthesize)
     .addConditionalEdges('critic_node', routeCritic, {

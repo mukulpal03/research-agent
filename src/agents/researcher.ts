@@ -105,11 +105,7 @@ export async function executeParallelResearch(
         } catch {}
       }
 
-      if (errMsg.includes('Tavily free limit is exhausted')) {
-        throw err;
-      }
-
-      return [];
+      throw err;
     }
   }));
 
@@ -129,11 +125,12 @@ export async function executeParallelResearch(
       }
     } else {
       const reasonMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
-      if (reasonMsg.includes('Tavily free limit is exhausted')) {
-        throw new Error(reasonMsg);
-      }
-      if (!sessionId) logger.workerError(i + 1, subQueries[i], reasonMsg);
+      throw new Error(reasonMsg || 'Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)');
     }
+  }
+
+  if (aggregatedFindings.length === 0) {
+    throw new Error('Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)');
   }
 
   return aggregatedFindings;
@@ -162,6 +159,11 @@ export async function researcherNode(
     existingUrls,
     sessionId
   );
+
+  if (newFindings.length === 0) {
+    const errorMsg = 'Oops! Looks like the Tavily free limit is exhausted. Please contact Mukul :)';
+    throw new Error(errorMsg);
+  }
 
   const updatedData = [...(researchData || []), ...newFindings];
   if (!sessionId) {

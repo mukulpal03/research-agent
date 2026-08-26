@@ -80,6 +80,32 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {/* Sticky Floating Toast Warning on Error / Limit Hit */}
+      {error && (
+        <div className="fixed bottom-6 right-6 z-50 max-w-md animate-in slide-in-from-bottom-5 duration-300">
+          <div className="bg-[#1A1A1A] text-white p-4 rounded-2xl shadow-2xl border-2 border-[#ECBA82] flex items-start gap-3.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm mt-0.5">
+              <Compass className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1 space-y-1">
+              <p className="text-xs font-mono font-bold text-[#ECBA82] uppercase tracking-wider">
+                API Retrieval Alert
+              </p>
+              <p className="text-sm font-medium leading-snug text-white">
+                {error}
+              </p>
+            </div>
+            <button
+              onClick={() => reset()}
+              className="text-white/60 hover:text-white text-xs p-1 rounded-lg hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+              title="Dismiss"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
